@@ -236,6 +236,13 @@ void call(Map parameters = [:]) {
                 [type: 'usernamePassword', id: 'cfCredentialsId', env: ['PIPER_username', 'PIPER_password']],
                 [type: 'usernamePassword', id: 'dockerCredentialsId', env: ['PIPER_dockerUsername', 'PIPER_dockerPassword']]
             ]
+
+            if (config.mtaExtensionCredentials) {
+                config.mtaExtensionCredentials.each { key, credentialsId ->
+                    echo "[INFO]${STEP_NAME}] Preparing credential for being used by piper-go. key: ${key}, credentialsId is: ${credentialsId}"
+                    credentials << [type: 'token', id: credentialsId, env: [credentialsId], resolveCredentialsId: false]
+                }
+            }
             piperExecuteBin(parameters, STEP_NAME, 'metadata/cloudFoundryDeploy.yaml', credentials)
             return
         }
