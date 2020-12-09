@@ -1361,9 +1361,9 @@ class CloudFoundryDeployTest extends BasePiperTest {
         assertEquals('metadata/cloudFoundryDeploy.yaml', usedMetadataFile)
 
         // contains assertion does not work apparently when comparing a list of lists agains an expected list.
-	boolean found
+	boolean found = false
         credInfo.each { entry ->
-            if (entry == [type:'token', id:'mtaExtensionCredentialCredentialId', env:['mtaExtensionCredentialCredentialId'], resolveCredentialsId:false]) {
+            if (entry == [type:'token', id:'mtaExtensionCredentialCredentialId', env:['MTAEXTENSIONCREDENTIALCREDENTIALID'], resolveCredentialsId:false]) {
                 found = true
             }
 	}
