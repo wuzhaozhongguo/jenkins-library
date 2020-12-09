@@ -1300,8 +1300,8 @@ func TestMtaExtensionCredentials(t *testing.T) {
 
 	_environ = func() []string {
 		return []string{
-			"myCredEnvVar1=******",
-			"myCredEnvVar2=++++++",
+			"MYCREDENVVAR1=******",
+			"MYCREDENVVAR2=++++++",
 		}
 	}
 

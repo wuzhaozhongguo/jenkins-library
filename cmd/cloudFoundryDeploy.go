@@ -724,18 +724,22 @@ func handleMtaExtensionCredentials(extFile string, credentials map[string]interf
 		}
 		pattern := "<%= " + name + " %>"
 		if strings.Contains(content, pattern) {
-			cred := env[credKey]
+			cred := env[toEnvVarKey(credKey)]
 			if len(cred) == 0 {
 				missingCredentials = append(missingCredentials, credKey)
 				continue
 			}
 			content = strings.Replace(content, pattern, cred, -1)
 			updated = true
-			log.Entry().Debugf("Mta extension credentials handling: Placeholder '%s' has been replaced by credential denoted by '%s' in file '%s'", name, credKey, extFile)
+			log.Entry().Debugf("Mta extension credentials handling: Placeholder '%s' has been replaced by credential denoted by '%s'/'%s' in file '%s'", name, credKey, toEnvVarKey(credKey), extFile)
 		}
 	}
 	if len(missingCredentials) > 0 {
-		return fmt.Errorf("Cannot hanlde mta extension credentials: No credentials found for '%s'. Are these credentials maintained?", missingCredentials)
+		missinCredsEnvVarKeyCompatible := []string{}
+		for _, missingKey := range missingCredentials {
+			missinCredsEnvVarKeyCompatible = append(missinCredsEnvVarKeyCompatible, toEnvVarKey(missingKey))
+		}
+		return fmt.Errorf("Cannot handle mta extension credentials: No credentials found for '%s'/'%s'. Are these credentials maintained?", missingCredentials, missinCredsEnvVarKeyCompatible)
 	}
 	if !updated {
 		log.Entry().Debugf("Mta extension credentials handling: Extension file '%s' has not been updated. Seems to contain no credentials.", extFile)
@@ -759,6 +763,10 @@ func handleMtaExtensionCredentials(extFile string, credentials map[string]interf
 	}
 
 	return nil
+}
+
+func toEnvVarKey(key string) string {
+	return strings.ReplaceAll(strings.ToUpper(key), "-", "_")
 }
 
 func toMap(keyValue []string, separator string) (map[string]string, error) {
