@@ -18,6 +18,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 )
 
 type cfFileUtil interface {
@@ -766,7 +767,19 @@ func handleMtaExtensionCredentials(extFile string, credentials map[string]interf
 }
 
 func toEnvVarKey(key string) string {
-	return strings.ReplaceAll(strings.ToUpper(key), "-", "_")
+	key = regexp.MustCompile(`[^A-Za-z0-9]`).ReplaceAllString(key, "_")
+	// from here on we have only ascii
+	modifiedKey := ""
+	last := '_'
+	for _, runeVal := range key {
+		if unicode.IsUpper(runeVal) && last != '_' {
+			modifiedKey += "_"
+		}
+		modifiedKey += string(unicode.ToUpper(runeVal))
+		last = runeVal
+	}
+	return modifiedKey
+	// since golang regex does not support negative lookbehinds we have to code it ourselvs
 }
 
 func toMap(keyValue []string, separator string) (map[string]string, error) {
