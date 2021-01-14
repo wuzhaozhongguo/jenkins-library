@@ -343,7 +343,6 @@ func (sys *SystemInstance) ProjectVersionCopyFromPartial(sourceID, targetID int6
 		PreviousProjectVersionID:    &sourceID,
 		CopyAnalysisProcessingRules: &enable,
 		CopyBugTrackerConfiguration: &enable,
-		CopyCurrentStateFpr:         &enable,
 		CopyCustomTags:              &enable,
 	}
 	params := &project_version_controller.CopyProjectVersionParams{Resource: &settings}
@@ -361,7 +360,6 @@ func (sys *SystemInstance) ProjectVersionCopyCurrentState(sourceID, targetID int
 	settings := models.ProjectVersionCopyCurrentStateRequest{
 		ProjectVersionID:         &targetID,
 		PreviousProjectVersionID: &sourceID,
-		CopyCurrentStateFpr:      &enable,
 	}
 	params := &project_version_controller.CopyCurrentStateForProjectVersionParams{Resource: &settings}
 	params.WithTimeout(sys.timeout)
