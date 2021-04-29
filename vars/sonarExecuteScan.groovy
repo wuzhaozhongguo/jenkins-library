@@ -1,4 +1,3 @@
-import com.sap.piper.JenkinsUtils
 import com.sap.piper.Utils
 import com.sap.piper.analytics.InfluxData
 import static com.sap.piper.Prerequisites.checkScript
@@ -12,7 +11,6 @@ void call(Map parameters = [:]) {
     handlePipelineStepErrors(stepName: STEP_NAME, stepParameters: parameters) {
         def script = checkScript(this, parameters) ?: this
         def utils = parameters.juStabUtils ?: new Utils()
-        def jenkinsUtils = parameters.jenkinsUtilsStub ?: new JenkinsUtils()
         String piperGoPath = parameters.piperGoPath ?: './piper'
 
         piperExecuteBin.prepareExecution(script, utils, parameters)
@@ -66,11 +64,12 @@ void call(Map parameters = [:]) {
                         withSonarQubeEnv(stepConfig.instance) {
                             withEnv(environment){
                                 influxWrapper(script){
-                                    piperExecuteBin.credentialWrapper(config, credentialInfo){
-                                        sh "${piperGoPath} ${STEP_NAME}${customDefaultConfig}${customConfigArg}"
-                                        archiveArtifacts artifacts: "sonarscan.json", allowEmptyArchive: true
+                                    piperExecuteBin.stepResultsWrapper(STEP_NAME, false, false) {
+                                        piperExecuteBin.credentialWrapper(config, credentialInfo){
+                                            sh "${piperGoPath} ${STEP_NAME}${customDefaultConfig}${customConfigArg}"
+                                            archiveArtifacts artifacts: "sonarscan.json", allowEmptyArchive: true
+                                        }
                                     }
-                                    jenkinsUtils.handleStepResults(STEP_NAME, false, false)
                                     script.commonPipelineEnvironment.readFromDisk(script)
                                 }
                             }
