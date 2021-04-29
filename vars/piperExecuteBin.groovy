@@ -70,12 +70,10 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
                     utils.unstash('pipelineStepReports')
                     try {
                         try {
-                            try {
+                            stepResultsWrapper(stepName, failOnMissingReports, failOnMissingLinks) {
                                 credentialWrapper(config, credentialInfo) {
                                     sh "${piperGoPath} ${stepName}${defaultConfigArgs}${customConfigArg}"
                                 }
-                            } finally {
-                                jenkinsUtils.handleStepResults(stepName, failOnMissingReports, failOnMissingLinks)
                             }
                         } finally {
                             script.commonPipelineEnvironment.readFromDisk(script)
@@ -218,6 +216,15 @@ void credentialWrapper(config, List credentialInfo, body) {
         }
     } else {
         body()
+    }
+}
+
+// reused in sonarExecuteScan
+void stepResultsWrapper(String stepName, boolean failOnMissingReports, boolean failOnMissingLinks, body) {
+    try {
+        body()
+    } finally {
+        jenkinsUtils.handleStepResults(stepName, failOnMissingReports, failOnMissingLinks)
     }
 }
 
