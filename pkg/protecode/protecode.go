@@ -166,16 +166,6 @@ func (pc *Protecode) mapResponse(r io.ReadCloser, response interface{}) {
 	}
 }
 
-func (pc *Protecode) sendAPIRequest(method string, url string, headers map[string][]string) (*io.ReadCloser, error) {
-
-	r, err := pc.client.SendRequest(method, url, nil, headers, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return &r.Body, nil
-}
-
 // ParseResultForInflux parses the result from the scan into the internal format
 func (pc *Protecode) ParseResultForInflux(result Result, excludeCVEs string) (map[string]int, []Vuln) {
 
@@ -265,7 +255,7 @@ func (pc *Protecode) DeleteScan(cleanupMode string, productID int) {
 		protecodeURL := pc.createURL("/api/product/", fmt.Sprintf("%v/", productID), "")
 		headers := map[string][]string{}
 
-		pc.sendAPIRequest("DELETE", protecodeURL, headers)
+		pc.send("DELETE", protecodeURL, headers)
 	default:
 		pc.logger.Fatalf("Unknown cleanup mode %v", cleanupMode)
 	}
@@ -281,7 +271,7 @@ func (pc *Protecode) LoadReport(reportFileName string, productID int) *io.ReadCl
 		"Outputfile":    {reportFileName},
 	}
 
-	readCloser, err := pc.sendAPIRequest(http.MethodGet, protecodeURL, headers)
+	readCloser, err := pc.send(http.MethodGet, protecodeURL, headers)
 	if err != nil {
 		pc.logger.WithError(err).Fatalf("It is not possible to load report %v", protecodeURL)
 	}
@@ -290,40 +280,34 @@ func (pc *Protecode) LoadReport(reportFileName string, productID int) *io.ReadCl
 }
 
 // UploadScanFile upload the scan file to the protecode server
-func (pc *Protecode) UploadScanFile(cleanupMode, group, filePath, fileName string) *ResultData {
+func (pc *Protecode) UploadScanFile(cleanupMode, group, filePath, fileName string) (*ResultData, error) {
 	deleteBinary := (cleanupMode == "binary" || cleanupMode == "complete")
-	headers := map[string][]string{"Group": {group}, "Delete-Binary": {fmt.Sprintf("%v", deleteBinary)}}
-
-	uploadURL := fmt.Sprintf("%v/api/upload/%v", pc.serverURL, fileName)
-
-	r, err := pc.client.UploadRequest(http.MethodPut, uploadURL, filePath, "file", headers, nil)
+	r, err := pc.triggerWithFileUpload(group, filePath, fileName, deleteBinary)
 	if err != nil {
-		pc.logger.WithError(err).Fatalf("Error during %v upload request", uploadURL)
-	} else {
-		pc.logger.Info("Upload successful")
+		// pc.logger.WithError(err).Fatal("Error during upload request")
+		return nil, err
 	}
+	pc.logger.Info("Upload successful")
 
 	result := new(ResultData)
-	pc.mapResponse(r.Body, result)
+	//TODO: handle err
+	pc.mapResponse(*r, result)
 
-	return result
+	return result, nil
 }
 
 // DeclareFetchURL configures the fetch url for the protecode scan
-func (pc *Protecode) DeclareFetchURL(cleanupMode, group, fetchURL string) *ResultData {
+func (pc *Protecode) DeclareFetchURL(cleanupMode, group, fetchURL string) (*ResultData, error) {
 	deleteBinary := (cleanupMode == "binary" || cleanupMode == "complete")
-	headers := map[string][]string{"Group": {group}, "Delete-Binary": {fmt.Sprintf("%v", deleteBinary)}, "Url": {fetchURL}, "Content-Type": {"application/json"}}
-
-	protecodeURL := fmt.Sprintf("%v/api/fetch/", pc.serverURL)
-	r, err := pc.sendAPIRequest(http.MethodPost, protecodeURL, headers)
+	r, err := pc.triggerWithFetchUrl(group, fetchURL, deleteBinary)
 	if err != nil {
-		pc.logger.WithError(err).Fatalf("Error during declare fetch url: %v", protecodeURL)
+		// pc.logger.WithError(err).Fatal("Error during declare fetch url")
+		return nil, err
 	}
-
 	result := new(ResultData)
+	//TODO: handle err
 	pc.mapResponse(*r, result)
-
-	return result
+	return result, nil
 }
 
 //PollForResult polls the protecode scan for the result scan
@@ -378,7 +362,7 @@ func (pc *Protecode) pullResult(productID int) (ResultData, error) {
 	headers := map[string][]string{
 		"acceptType": {"application/json"},
 	}
-	r, err := pc.sendAPIRequest(http.MethodGet, protecodeURL, headers)
+	r, err := pc.send(http.MethodGet, protecodeURL, headers)
 	if err != nil {
 		return *new(ResultData), err
 	}
@@ -412,7 +396,7 @@ func (pc *Protecode) LoadExistingProduct(group string, reuseExisting bool) int {
 
 func (pc *Protecode) loadExisting(protecodeURL string, headers map[string][]string) *ProductData {
 
-	r, err := pc.sendAPIRequest(http.MethodGet, protecodeURL, headers)
+	r, err := pc.send(http.MethodGet, protecodeURL, headers)
 	if err != nil {
 		pc.logger.WithError(err).Fatalf("Error during load existing product: %v", protecodeURL)
 	}
