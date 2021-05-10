@@ -43,7 +43,7 @@ func (pc *Protecode) triggerWithFileUpload(group, filePath, fileName string, del
 	// send request
 	r, err := pc.upload(http.MethodPut, protecodeURL, filePath, headers)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to trigger scan with file upload", protecodeURL)
+		return nil, errors.Wrapf(err, "failed to trigger scan with file upload: %s", protecodeURL)
 	}
 	return r, nil
 }
@@ -60,7 +60,7 @@ func (pc *Protecode) triggerWithFetchUrl(group, fetchURL string, deleteBinary bo
 	// send request
 	r, err := pc.send(http.MethodPost, protecodeURL, headers)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to trigger scan with fetch-url", protecodeURL)
+		return nil, errors.Wrapf(err, "failed to trigger scan with fetch-url: %s", protecodeURL)
 	}
 	return r, nil
 }
@@ -73,7 +73,7 @@ func (pc *Protecode) loadResult(productID int) (*io.ReadCloser, error) {
 	// send request
 	r, err := pc.send(http.MethodGet, protecodeURL, headers)
 	if err != nil {
-		return r, errors.Wrapf(err, "failed to load results", protecodeURL)
+		return r, errors.Wrapf(err, "failed to load results: %s", protecodeURL)
 	}
 	return r, nil
 }
