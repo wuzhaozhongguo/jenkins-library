@@ -30,8 +30,6 @@ func (pc *Protecode) loadProduct(group string) (*io.ReadCloser, error) {
 	if err != nil {
 		return r, errors.Wrapf(err, "failed to load product: %s", protecodeURL)
 	}
-	// result := new(ProductData)
-	// pc.mapResponse(*r, result)
 	return r, nil
 }
 
@@ -42,14 +40,11 @@ func (pc *Protecode) triggerWithFileUpload(group, filePath, fileName string, del
 		"Group":         {group},
 		"Delete-Binary": {fmt.Sprintf("%v", deleteBinary)},
 	}
-
+	// send request
 	r, err := pc.upload(http.MethodPut, protecodeURL, filePath, headers)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to trigger scan with file upload", protecodeURL)
 	}
-	// result := new(ResultData)
-	// pc.logger.Info("Upload successful")
-	// pc.mapResponse(*r, result)
 	return r, nil
 }
 
@@ -62,12 +57,11 @@ func (pc *Protecode) triggerWithFetchUrl(group, fetchURL string, deleteBinary bo
 		"Delete-Binary": {fmt.Sprintf("%v", deleteBinary)},
 		"Url":           {fetchURL},
 	}
+	// send request
 	r, err := pc.send(http.MethodPost, protecodeURL, headers)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to trigger scan with fetch-url", protecodeURL)
 	}
-	// result := new(ResultData)
-	// pc.mapResponse(*r, result)
 	return r, nil
 }
 
@@ -79,10 +73,8 @@ func (pc *Protecode) loadResult(productID int) (*io.ReadCloser, error) {
 	// send request
 	r, err := pc.send(http.MethodGet, protecodeURL, headers)
 	if err != nil {
-		return r, errors.Wrapf(err, "failed to pull results", protecodeURL)
+		return r, errors.Wrapf(err, "failed to load results", protecodeURL)
 	}
-	// result := new(ResultData)
-	// pc.mapResponse(*r, result)
 	return r, nil
 }
 
@@ -96,7 +88,7 @@ func (pc *Protecode) loadResultAsPdf(productID int, reportFileName string) (*io.
 	// send request
 	readCloser, err := pc.send(http.MethodGet, protecodeURL, headers)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to load report: %s", protecodeURL)
+		return nil, errors.Wrapf(err, "failed to load result as PDF: %s", protecodeURL)
 	}
 	return readCloser, nil
 }
@@ -107,7 +99,7 @@ func (pc *Protecode) deleteResult(productID int) error {
 	// send request
 	_, err := pc.send(http.MethodDelete, protecodeURL, headers)
 	if err != nil {
-		return errors.Wrapf(err, "failed to delete product: %s", protecodeURL)
+		return errors.Wrapf(err, "failed to delete result: %s", protecodeURL)
 	}
 	return nil
 }
