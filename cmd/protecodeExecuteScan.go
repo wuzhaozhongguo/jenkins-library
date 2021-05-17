@@ -297,19 +297,19 @@ func uploadScanOrDeclareFetch(config protecodeExecuteScanOptions, productID int,
 	return productID
 }
 
-func hasExisting(productID int, verifyOnly bool) bool {
-	if (productID > 0) || verifyOnly {
-		return true
-	}
-	return false
-}
-
 func fileExists(filename string) bool {
 	info, err := os.Stat(filename)
 	if os.IsNotExist(err) {
 		return false
 	}
 	return !info.IsDir()
+}
+
+func hasExisting(productID int, verifyOnly bool) bool {
+	if (productID > 0) || verifyOnly {
+		return true
+	}
+	return false
 }
 
 var writeReportToFile = func(resp io.ReadCloser, reportFileName string) error {
