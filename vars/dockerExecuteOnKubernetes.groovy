@@ -483,7 +483,7 @@ private List getContainerList(config) {
             name           : containerName.toLowerCase(),
             image          : imageName,
             imagePullPolicy: pullImage ? "Always" : "IfNotPresent",
-            env            : getContainerEnvs(config, imageName, config.dockerEnvVars, config.dockerWorkspace)
+            env            : getContainerEnvs(config, containerName.toLowerCase(), imageName, config.dockerEnvVars, config.dockerWorkspace)
         ]
         if (config.containerMountPath) {
             containerSpec.volumeMounts = [[name: "volume", mountPath: config.containerMountPath]]
@@ -533,7 +533,7 @@ private List getContainerList(config) {
             name           : sideCarContainerName,
             image          : config.sidecarImage,
             imagePullPolicy: config.sidecarPullImage ? "Always" : "IfNotPresent",
-            env            : getContainerEnvs(config, containerName.toLowerCase(), config.sidecarImage, config.sidecarEnvVars, config.sidecarWorkspace),
+            env            : getContainerEnvs(config, sideCarContainerName, config.sidecarImage, config.sidecarEnvVars, config.sidecarWorkspace),
             command        : []
         ]
         def resources = getResources(sideCarContainerName, config)
