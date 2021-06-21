@@ -533,7 +533,7 @@ private List getContainerList(config) {
             name           : sideCarContainerName,
             image          : config.sidecarImage,
             imagePullPolicy: config.sidecarPullImage ? "Always" : "IfNotPresent",
-            env            : getContainerEnvs(config, config.sidecarImage, config.sidecarEnvVars, config.sidecarWorkspace),
+            env            : getContainerEnvs(config, containerName.toLowerCase(), config.sidecarImage, config.sidecarEnvVars, config.sidecarWorkspace),
             command        : []
         ]
         def resources = getResources(sideCarContainerName, config)
@@ -567,8 +567,9 @@ private Map getResources(String containerName, Map config) {
  * @param config Map with configurations
  */
 
-private List getContainerEnvs(config, imageName, defaultEnvVars, defaultConfig) {
-    def containerEnv = [[name: 'CONTAINER_SHA', valueFrom: [fieldRef: [fieldPath: 'status.containerStatuses']]]]
+private List getContainerEnvs(config, containerName, imageName, defaultEnvVars, defaultConfig) {
+    //def containerEnv = [[name: 'CONTAINER_SHA', valueFrom: [fieldRef: [fieldPath: 'status.containerStatuses']]]]
+    def containerEnv = [[name: 'CONTAINER_SHA', valueFrom: [resourceFieldRef: [containerName: containerName, resource: 'status.imageID']]]]
     def dockerEnvVars = config.containerEnvVars?.get(imageName) ?: defaultEnvVars ?: [:]
     def dockerWorkspace = config.containerWorkspaces?.get(imageName) != null ? config.containerWorkspaces?.get(imageName) : defaultConfig ?: ''
 
