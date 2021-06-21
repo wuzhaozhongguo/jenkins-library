@@ -568,7 +568,7 @@ private Map getResources(String containerName, Map config) {
  */
 
 private List getContainerEnvs(config, imageName, defaultEnvVars, defaultConfig) {
-    def containerEnv = [[name: 'CONTAINER_SHA', valueFrom: [fieldRef: [fieldPath: 'status.podIP']]]]
+    def containerEnv = [[name: 'CONTAINER_SHA', valueFrom: [fieldRef: [fieldPath: 'status.containerStatuses']]]]
     def dockerEnvVars = config.containerEnvVars?.get(imageName) ?: defaultEnvVars ?: [:]
     def dockerWorkspace = config.containerWorkspaces?.get(imageName) != null ? config.containerWorkspaces?.get(imageName) : defaultConfig ?: ''
 
