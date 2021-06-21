@@ -348,6 +348,7 @@ private String generatePodSpec(Map config) {
     podSpec.spec.initContainers = getInitContainerList(config)
     podSpec.spec.containers = getContainerList(config)
     podSpec.spec.securityContext = getSecurityContext(config)
+    podSpec.spec.env = [[name: CONTAINER_SHA, valueFrom: [fieldRef: [fieldPath: 'status.imageID']]]]
 
     if (config.containerMountPath) {
         podSpec.spec.volumes = [[
