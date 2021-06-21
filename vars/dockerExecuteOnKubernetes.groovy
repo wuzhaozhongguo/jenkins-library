@@ -348,7 +348,6 @@ private String generatePodSpec(Map config) {
     podSpec.spec.initContainers = getInitContainerList(config)
     podSpec.spec.containers = getContainerList(config)
     podSpec.spec.securityContext = getSecurityContext(config)
-    podSpec.spec.env = [[name: CONTAINER_SHA, valueFrom: [fieldRef: [fieldPath: 'status.imageID']]]]
 
     if (config.containerMountPath) {
         podSpec.spec.volumes = [[
@@ -569,7 +568,7 @@ private Map getResources(String containerName, Map config) {
  */
 
 private List getContainerEnvs(config, imageName, defaultEnvVars, defaultConfig) {
-    def containerEnv = []
+    def containerEnv = [[name: 'CONTAINER_SHA', valueFrom: [fieldRef: [fieldPath: 'status.imageID']]]]
     def dockerEnvVars = config.containerEnvVars?.get(imageName) ?: defaultEnvVars ?: [:]
     def dockerWorkspace = config.containerWorkspaces?.get(imageName) != null ? config.containerWorkspaces?.get(imageName) : defaultConfig ?: ''
 
