@@ -141,11 +141,9 @@ func createOrUpdateProjectSettingsXML(projectSettingsFile string, altDeploymentR
 
 func loadRemoteRepoCertificates(certificateList []string, client piperhttp.Downloader, flags *[]string, runner command.ExecRunner, fileUtils piperutils.FileUtils, javaCaCertFilePath string) error {
 	existingJavaCaCerts := filepath.Join(os.Getenv("JAVA_HOME"), "jre", "lib", "security", "cacerts")
-
-	if len(javaCaCertFilePath) > 0 {
+	/* if len(javaCaCertFilePath) > 0 {
 		existingJavaCaCerts = javaCaCertFilePath
-
-	}
+	} */
 
 	exists, err := fileUtils.FileExists(existingJavaCaCerts)
 
@@ -159,19 +157,21 @@ func loadRemoteRepoCertificates(certificateList []string, client piperhttp.Downl
 
 	trustStore := filepath.Join(getWorkingDirForTrustStore(), ".pipeline", "maven", "cacerts")
 
+	log.Entry().Infof("copying existing java cacerts %s to %s ", existingJavaCaCerts, trustStore)
+
+	_, fileUtilserr := fileUtils.Copy(existingJavaCaCerts, trustStore)
+
+	if fileUtilserr != nil {
+		return errors.Wrap(err, "Could not copy existing cacerts into new keystore ")
+	}
+
 	if exists, _ := fileUtils.FileExists(trustStore); exists {
 		maven_opts := "-Djavax.net.ssl.trustStore=" + trustStore + " -Djavax.net.ssl.trustStorePassword=changeit"
 		err := os.Setenv("MAVEN_OPTS", maven_opts)
 		if err != nil {
 			return errors.Wrap(err, "Could not create MAVEN_OPTS environment variable ")
 		}
-	} else {
-		log.Entry().Infof("copying existing cacart file %s to new trust store  %s", existingJavaCaCerts, trustStore)
-		_, fileUtilserr := fileUtils.Copy(existingJavaCaCerts, trustStore)
-
-		if fileUtilserr != nil {
-			return errors.Wrap(err, "Could not copy existing cacerts into new trust store ")
-		}
+		log.Entry().WithField("trust store", trustStore).Info("Using new local trust store %s", trustStore)
 	}
 
 	if len(certificateList) > 0 {
@@ -201,12 +201,13 @@ func loadRemoteRepoCertificates(certificateList []string, client piperhttp.Downl
 			}
 		}
 
-		maven_opts := "-Djavax.net.ssl.trustStore=" + trustStore + " -Djavax.net.ssl.trustStorePassword=changeit"
+		/* 	maven_opts := "-Djavax.net.ssl.trustStore=.pipeline/keystore.jks -Djavax.net.ssl.trustStorePassword=changeit"
 		err := os.Setenv("MAVEN_OPTS", maven_opts)
 		if err != nil {
 			return errors.Wrap(err, "Could not create MAVEN_OPTS environment variable ")
 		}
-		log.Entry().Infof("trust store %s enhanced successfully with custom TLS certificates", trustStore)
+		log.Entry().WithField("trust store", trustStore).Info("Using local trust store") */
+		log.Entry().Infof("trust store %s enhanced with custom tls certy ", trustStore)
 	} else {
 		log.Entry().Debug("Download of TLS certificates skipped")
 	}
