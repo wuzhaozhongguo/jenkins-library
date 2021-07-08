@@ -166,7 +166,7 @@ func loadRemoteRepoCertificates(certificateList []string, client piperhttp.Downl
 		return errors.Wrap(err, "Could not copy existing cacerts into new keystore ")
 	}
 
-	//log.Entry().Infof("using trust store %s", trustStore)
+	log.Entry().Infof("using trust store %s", trustStore)
 
 	if exists, _ := fileUtils.FileExists(trustStore); exists {
 		maven_opts := "-Djavax.net.ssl.trustStore=.pipeline/maven/cacerts -Djavax.net.ssl.trustStorePassword=changeit"
@@ -204,11 +204,11 @@ func loadRemoteRepoCertificates(certificateList []string, client piperhttp.Downl
 			}
 		}
 
-		/* maven_opts := "-Djavax.net.ssl.trustStore=.pipeline/keystore.jks -Djavax.net.ssl.trustStorePassword=changeit"
+		maven_opts := "-Djavax.net.ssl.trustStore=.pipeline/maven/cacerts -Djavax.net.ssl.trustStorePassword=changeit"
 		err := os.Setenv("MAVEN_OPTS", maven_opts)
 		if err != nil {
 			return errors.Wrap(err, "Could not create MAVEN_OPTS environment variable ")
-		} */
+		}
 		log.Entry().WithField("trust store", trustStore).Infof("%s enahnaced to include the custom tls", trustStore)
 	} else {
 		log.Entry().Debug("Download of TLS certificates skipped")
