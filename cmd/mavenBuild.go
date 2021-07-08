@@ -159,18 +159,18 @@ func loadRemoteRepoCertificates(certificateList []string, client piperhttp.Downl
 
 	trustStore := filepath.Join(getWorkingDirForTrustStore(), ".pipeline", "maven", "cacerts")
 
-	log.Entry().Infof("copying existing cacart file %s to new trust store  %s", existingJavaCaCerts, trustStore)
-	_, fileUtilserr := fileUtils.Copy(existingJavaCaCerts, trustStore)
-
-	if fileUtilserr != nil {
-		return errors.Wrap(err, "Could not copy existing cacerts into new trust store ")
-	}
-
 	if exists, _ := fileUtils.FileExists(trustStore); exists {
 		maven_opts := "-Djavax.net.ssl.trustStore=" + trustStore + " -Djavax.net.ssl.trustStorePassword=changeit"
 		err := os.Setenv("MAVEN_OPTS", maven_opts)
 		if err != nil {
 			return errors.Wrap(err, "Could not create MAVEN_OPTS environment variable ")
+		}
+	} else {
+		log.Entry().Infof("copying existing cacart file %s to new trust store  %s", existingJavaCaCerts, trustStore)
+		_, fileUtilserr := fileUtils.Copy(existingJavaCaCerts, trustStore)
+
+		if fileUtilserr != nil {
+			return errors.Wrap(err, "Could not copy existing cacerts into new trust store ")
 		}
 	}
 
@@ -201,7 +201,7 @@ func loadRemoteRepoCertificates(certificateList []string, client piperhttp.Downl
 			}
 		}
 
-		maven_opts := "-Djavax.net.ssl.trustStore=.pipeline/keystore.jks -Djavax.net.ssl.trustStorePassword=changeit"
+		maven_opts := "-Djavax.net.ssl.trustStore=" + trustStore + " -Djavax.net.ssl.trustStorePassword=changeit"
 		err := os.Setenv("MAVEN_OPTS", maven_opts)
 		if err != nil {
 			return errors.Wrap(err, "Could not create MAVEN_OPTS environment variable ")
