@@ -157,7 +157,7 @@ func loadRemoteRepoCertificates(certificateList []string, client piperhttp.Downl
 		return errors.Wrap(err, "Could not find the existing java cacerts")
 	}
 
-	trustStore := filepath.Join(getWorkingDirForTrustStore(), ".pipeline", "keystore.jks")
+	trustStore := filepath.Join(getWorkingDirForTrustStore(), ".pipeline", "maven", "cacerts")
 
 	log.Entry().Infof("copying existing cacart file %s to new trust store  %s", existingJavaCaCerts, trustStore)
 	_, fileUtilserr := fileUtils.Copy(existingJavaCaCerts, trustStore)
