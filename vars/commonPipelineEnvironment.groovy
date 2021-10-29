@@ -225,7 +225,7 @@ class commonPipelineEnvironment implements Serializable {
         // net.sf.json.JSONNull can come in through readPipelineEnv via readJSON()
         // leaving them in will create a StackOverflowError further down in writePipelineEnv()
         // thus removing them from the map for now
-        if (value != null && !(value instanceof net.sf.json.JSONNull)) {
+        if (value != null && !(value instanceof net.sf.json.JSONNull) && value !=="") {
             // prefix is assumed by step if nothing else is specified
             def prefix = ~/^.pipeline\/commonPipelineEnvironment\//
             filename -= prefix
