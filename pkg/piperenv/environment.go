@@ -64,7 +64,7 @@ func writeEmptyContentToDisk(filename string, data []byte) error {
 		os.MkdirAll(filepath.Dir(filename), 0777)
 	}
 
-	log.Entry().Debugf("Writing file to disk: %v", filename)
+	log.Entry().Debugf("Writing empty contents to file on disk: %v", filename)
 	return ioutil.WriteFile(filename, data, 0766)
 }
 
@@ -79,6 +79,8 @@ func writeToDisk(filename string, data []byte) error {
 	if len(data) > 0 {
 		log.Entry().Debugf("Writing file to disk: %v", filename)
 		return ioutil.WriteFile(filename, data, 0766)
+	} else {
+		writeEmptyContentToDisk(filename, data)
 	}
 	return nil
 }
