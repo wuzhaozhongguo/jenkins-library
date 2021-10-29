@@ -29,13 +29,7 @@ func SetResourceParameter(path, resourceName, paramName string, value interface{
 			return errors.Wrapf(err, "failed to marshal resource parameter value %v", typedValue)
 		}
 	}
-	log.Entry().Debugf("Writing file: %v to disk with value: %v ", paramPath, string(content))
-	if len(string(content)) > 0 {
-		return writeToDisk(paramPath, content)
-	} else {
-		return writeEmptyContentToDisk(paramPath, content)
-	}
-
+	return writeToDisk(paramPath, content)
 }
 
 // GetResourceParameter reads a resource parameter from the environment stored in the file system
@@ -58,16 +52,6 @@ func GetParameter(path, name string) string {
 	return readFromDisk(paramPath)
 }
 
-func writeEmptyContentToDisk(filename string, data []byte) error {
-	if _, err := os.Stat(filepath.Dir(filename)); os.IsNotExist(err) {
-		log.Entry().Debugf("Creating directory: %v", filepath.Dir(filename))
-		os.MkdirAll(filepath.Dir(filename), 0777)
-	}
-
-	log.Entry().Debugf("Writing empty contents to file on disk: %v", filename)
-	return ioutil.WriteFile(filename, data, 0766)
-}
-
 func writeToDisk(filename string, data []byte) error {
 
 	if _, err := os.Stat(filepath.Dir(filename)); os.IsNotExist(err) {
@@ -76,13 +60,12 @@ func writeToDisk(filename string, data []byte) error {
 	}
 
 	//ToDo: make sure to not overwrite file but rather add another file? Create error if already existing?
-	if len(data) > 0 {
-		log.Entry().Debugf("Writing file to disk: %v", filename)
-		return ioutil.WriteFile(filename, data, 0766)
-	} else {
-		writeEmptyContentToDisk(filename, data)
-	}
-	return nil
+	//if len(data) > 0 {
+	log.Entry().Debugf("Writing file to disk: %v", filename)
+	return ioutil.WriteFile(filename, data, 0766)
+	//}
+
+	//return nil
 }
 
 func readFromDisk(filename string) string {
