@@ -30,7 +30,7 @@ func SetResourceParameter(path, resourceName, paramName string, value interface{
 		}
 	}
 	log.Entry().Debugf("Writing file: %v to disk with value: %v ", paramPath, string(content))
-	if len(content) > 0 {
+	if len(string(content)) > 0 {
 		return writeToDisk(paramPath, content)
 	} else {
 		return writeEmptyContentToDisk(paramPath, content)
