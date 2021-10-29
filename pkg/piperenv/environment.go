@@ -29,7 +29,7 @@ func SetResourceParameter(path, resourceName, paramName string, value interface{
 			return errors.Wrapf(err, "failed to marshal resource parameter value %v", typedValue)
 		}
 	}
-
+	log.Entry().Debugf("Writing file: %v to disk with value: %v ", paramPath, content)
 	if len(content) > 0 {
 		return writeToDisk(paramPath, content)
 	} else {
