@@ -29,7 +29,13 @@ func SetResourceParameter(path, resourceName, paramName string, value interface{
 			return errors.Wrapf(err, "failed to marshal resource parameter value %v", typedValue)
 		}
 	}
-	return writeToDisk(paramPath, content)
+
+	if len(content) > 0 {
+		return writeToDisk(paramPath, content)
+	} else {
+		return writeEmptyContentToDisk(paramPath, content)
+	}
+
 }
 
 // GetResourceParameter reads a resource parameter from the environment stored in the file system
@@ -50,6 +56,16 @@ func SetParameter(path, name, value string) error {
 func GetParameter(path, name string) string {
 	paramPath := filepath.Join(path, name)
 	return readFromDisk(paramPath)
+}
+
+func writeEmptyContentToDisk(filename string, data []byte) error {
+	if _, err := os.Stat(filepath.Dir(filename)); os.IsNotExist(err) {
+		log.Entry().Debugf("Creating directory: %v", filepath.Dir(filename))
+		os.MkdirAll(filepath.Dir(filename), 0777)
+	}
+
+	log.Entry().Debugf("Writing file to disk: %v", filename)
+	return ioutil.WriteFile(filename, data, 0766)
 }
 
 func writeToDisk(filename string, data []byte) error {
