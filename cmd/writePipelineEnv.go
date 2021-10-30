@@ -3,12 +3,13 @@ package cmd
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/SAP/jenkins-library/pkg/log"
-	"github.com/SAP/jenkins-library/pkg/piperenv"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/SAP/jenkins-library/pkg/log"
+	"github.com/SAP/jenkins-library/pkg/piperenv"
+	"github.com/spf13/cobra"
 )
 
 // WritePipelineEnv Serializes the commonPipelineEnvironment JSON to disk
@@ -52,7 +53,7 @@ func runWritePipelineEnv() error {
 	if err != nil {
 		return err
 	}
-
+	log.Entry().Debugf("Anil : commonPipelineEnvironment is : %v", commonPipelineEnv)
 	rootPath := filepath.Join(GeneralConfig.EnvRootPath, "commonPipelineEnvironment")
 	err = commonPipelineEnv.WriteToDisk(rootPath)
 	if err != nil {
