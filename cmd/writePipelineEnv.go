@@ -53,7 +53,7 @@ func runWritePipelineEnv() error {
 	if err != nil {
 		return err
 	}
-	log.Entry().Debugf("Anil : commonPipelineEnvironment is : %v", commonPipelineEnv)
+	log.Entry().Debugf("Anil Test: commonPipelineEnvironment is : %v", commonPipelineEnv)
 	rootPath := filepath.Join(GeneralConfig.EnvRootPath, "commonPipelineEnvironment")
 	err = commonPipelineEnv.WriteToDisk(rootPath)
 	if err != nil {
