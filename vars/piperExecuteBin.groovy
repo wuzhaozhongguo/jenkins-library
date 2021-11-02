@@ -66,7 +66,7 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
 
             dockerWrapper(script, stepName, config) {
                 handleErrorDetails(stepName) {
-                    writePipelineEnv(script: script, piperGoPath: piperGoPath)
+                    writePipelineEnv(script: script, piperGoPath: piperGoPath, verbose: true)
                     utils.unstash('pipelineStepReports')
                     try {
                         try {
@@ -78,7 +78,7 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
                                 jenkinsUtils.handleStepResults(stepName, failOnMissingReports, failOnMissingLinks)
                             }
                         } finally {
-                           readPipelineEnv(script: script, piperGoPath: piperGoPath)
+                           readPipelineEnv(script: script, piperGoPath: piperGoPath, verbose: true)
                         }
                     } finally {
                         InfluxData.readFromDisk(script)
