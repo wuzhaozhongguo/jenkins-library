@@ -83,21 +83,17 @@ func dirToMap(m map[string]interface{}, dirPath, prefix string) error {
 			continue
 		}
 		// load file content and unmarshal it if needed
-		mapKey, value, err := readFileContent(path.Join(dirPath, dirItem.Name()))
+		mapKey, value, toBeDeleted, err := readFileContent(path.Join(dirPath, dirItem.Name()))
 		if err != nil {
 			return err
 		}
-		if _, ok := value.(string); ok {
-			if value == "isDeleted" {
-				log.Entry().Infof("Rooster says removing  file from disk: %v", path.Join(dirPath, dirItem.Name()))
-				err := removeFileFromDisk(path.Join(dirPath, dirItem.Name()))
-				if err != nil {
-					return err
-				}
-				continue
-			} else {
-				m[path.Join(prefix, mapKey)] = value
+		if toBeDeleted {
+			log.Entry().Infof("Rooster says removing  file from disk: %v", path.Join(dirPath, dirItem.Name()))
+			err := removeFileFromDisk(path.Join(dirPath, dirItem.Name()))
+			if err != nil {
+				return err
 			}
+			continue
 		} else {
 			m[path.Join(prefix, mapKey)] = value
 		}
@@ -111,10 +107,12 @@ func removeFileFromDisk(fullPath string) error {
 	return err
 }
 
-func readFileContent(fullPath string) (string, interface{}, error) {
+func readFileContent(fullPath string) (string, interface{}, bool, error) {
+	toBeDeleted := false
+
 	fileContent, err := ioutil.ReadFile(fullPath)
 	if err != nil {
-		return "", nil, err
+		return "", nil, toBeDeleted, err
 	}
 	fileName := filepath.Base(fullPath)
 
@@ -125,9 +123,12 @@ func readFileContent(fullPath string) (string, interface{}, error) {
 		decoder.UseNumber()
 		err = decoder.Decode(&value)
 		if err != nil {
-			return "", nil, err
+			return "", nil, toBeDeleted, err
 		}
-		return strings.TrimSuffix(fileName, ".json"), value, nil
+		return strings.TrimSuffix(fileName, ".json"), value, toBeDeleted, nil
 	}
-	return fileName, string(fileContent), nil
+	if string(fileContent) == "isDeleted" {
+		toBeDeleted = true
+	}
+	return fileName, string(fileContent), toBeDeleted, nil
 }
