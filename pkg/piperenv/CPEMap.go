@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/SAP/jenkins-library/pkg/log"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/SAP/jenkins-library/pkg/log"
 )
 
 // CPEMap represents the common pipeline environment map
@@ -86,7 +87,10 @@ func dirToMap(m map[string]interface{}, dirPath, prefix string) error {
 		if err != nil {
 			return err
 		}
-		m[path.Join(prefix, mapKey)] = value
+		if len(value.(string)) > 0 {
+			m[path.Join(prefix, mapKey)] = value
+		}
+
 	}
 	return nil
 }
