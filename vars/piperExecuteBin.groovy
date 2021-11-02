@@ -26,6 +26,10 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
 
         String piperGoPath = parameters.piperGoPath ?: './piper'
 
+        if (stepName == 'writePipelineEnv'){
+            piperGoPath = './piper'
+        }
+
         prepareExecution(script, utils, parameters)
         prepareMetadataResource(script, metadataFile)
         Map stepParameters = prepareStepParameters(parameters)
