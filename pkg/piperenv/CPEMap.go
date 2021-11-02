@@ -88,12 +88,12 @@ func dirToMap(m map[string]interface{}, dirPath, prefix string) error {
 			return err
 		}
 		if fileContents, ok := value.(string); ok {
-			var value interface{}
-			err = json.Unmarshal([]byte(fileContents), &value)
-			if err != nil {
-				m[path.Join(prefix, mapKey)] = value
-			} else {
-				log.Entry().Infof("Rooster says read this is the place %v", value)
+			if fileContents == "isDeleted" {
+				err := removeFileFromDisk(path.Join(dirPath, dirItem.Name()))
+				if err != nil {
+					return err
+				}
+				continue
 			}
 		} else {
 			m[path.Join(prefix, mapKey)] = value
@@ -101,6 +101,11 @@ func dirToMap(m map[string]interface{}, dirPath, prefix string) error {
 
 	}
 	return nil
+}
+
+func removeFileFromDisk(fullPath string) error {
+	err := os.RemoveAll(fullPath)
+	return err
 }
 
 func readFileContent(fullPath string) (string, interface{}, error) {
