@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"encoding/json"
+	"os"
+	"path"
+
 	"github.com/SAP/jenkins-library/pkg/log"
 	"github.com/SAP/jenkins-library/pkg/piperenv"
 	"github.com/spf13/cobra"
-	"os"
-	"path"
 )
 
 // ReadPipelineEnv reads the commonPipelineEnvironment from disk and outputs it as JSON
@@ -41,6 +42,7 @@ func runReadPipelineEnv() error {
 	if err != nil {
 		return err
 	}
+	log.Entry().Infof("Rooster says read pipline env is %v", cpe)
 	_, err = os.Stdout.Write(bytes)
 	if err != nil {
 		return err

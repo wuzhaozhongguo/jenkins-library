@@ -3,12 +3,13 @@ package cmd
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/SAP/jenkins-library/pkg/log"
-	"github.com/SAP/jenkins-library/pkg/piperenv"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/SAP/jenkins-library/pkg/log"
+	"github.com/SAP/jenkins-library/pkg/piperenv"
+	"github.com/spf13/cobra"
 )
 
 // WritePipelineEnv Serializes the commonPipelineEnvironment JSON to disk
@@ -33,6 +34,7 @@ func WritePipelineEnv() *cobra.Command {
 
 func runWritePipelineEnv() error {
 	pipelineEnv, ok := os.LookupEnv("PIPER_pipelineEnv")
+	log.Entry().Infof("Rooster says write pipline env is %v", pipelineEnv)
 	inBytes := []byte(pipelineEnv)
 	if !ok {
 		var err error
