@@ -34,6 +34,7 @@ func WritePipelineEnv() *cobra.Command {
 
 func runWritePipelineEnv() error {
 	pipelineEnv, ok := os.LookupEnv("PIPER_pipelineEnv")
+	log.Entry().Infof("Rooster says pipline env is %v", pipelineEnv)
 	inBytes := []byte(pipelineEnv)
 	if !ok {
 		var err error
