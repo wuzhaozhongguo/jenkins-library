@@ -13,6 +13,7 @@ void call(Map parameters = [:]) {
 
     def jsonMap = groovy.json.JsonOutput.toJson(cpe)
     if (piperGoPath && jsonMap) {
+        echo "Roster test ${jsonMap}]"
         withEnv(["PIPER_pipelineEnv=${jsonMap}"]) {
             def output = script.sh(returnStdout: true, script: "${piperGoPath} writePipelineEnv")
             if (parameters?.verbose) {
