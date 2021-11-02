@@ -87,13 +87,16 @@ func dirToMap(m map[string]interface{}, dirPath, prefix string) error {
 		if err != nil {
 			return err
 		}
-		if fileContents, ok := value.(string); ok {
-			if fileContents == "isDeleted" {
+		if _, ok := value.(string); ok {
+			if value == "isDeleted" {
+				log.Entry().Infof("Rooster says removing  file from disk: %v", path.Join(dirPath, dirItem.Name()))
 				err := removeFileFromDisk(path.Join(dirPath, dirItem.Name()))
 				if err != nil {
 					return err
 				}
 				continue
+			} else {
+				m[path.Join(prefix, mapKey)] = value
 			}
 		} else {
 			m[path.Join(prefix, mapKey)] = value
