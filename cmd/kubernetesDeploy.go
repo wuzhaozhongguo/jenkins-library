@@ -103,12 +103,10 @@ func runHelmDeploy(config kubernetesDeployOptions, command command.ExecRunner, s
 	}
 
 	var secretsData string
-	if len(config.DockerConfigJSON) == 0 && (len(config.ContainerRegistryUser) == 0 || len(config.ContainerRegistryPassword) == 0) {
-		log.Entry().Info("No container registry credentials or docker config.json file provided or credentials incomplete: skipping secret creation")
-		if len(config.ContainerRegistrySecret) > 0 {
-			secretsData = fmt.Sprintf(",imagePullSecrets[0].name=%v", config.ContainerRegistrySecret)
-		}
-	} else {
+	if len(config.DockerConfigJSON) > 0 && (len(config.ContainerRegistryUser) > 0 && len(config.ContainerRegistryPassword) > 0) {
+
+		// ToDo: re-create the docker config json after pull https://github.com/SAP/jenkins-library/pull/3206 is merged
+
 		var dockerRegistrySecret bytes.Buffer
 		command.Stdout(&dockerRegistrySecret)
 		kubeSecretParams := defineKubeSecretParams(config, containerRegistry)
@@ -135,6 +133,12 @@ func runHelmDeploy(config kubernetesDeployOptions, command command.ExecRunner, s
 
 		// pass secret in helm default template way and in Piper backward compatible way
 		secretsData = fmt.Sprintf(",secret.name=%v,secret.dockerconfigjson=%v,imagePullSecrets[0].name=%v", config.ContainerRegistrySecret, dockerRegistrySecretData.Data.DockerConfJSON, config.ContainerRegistrySecret)
+
+	} else {
+		log.Entry().Info("No container registry credentials or docker config.json file provided or credentials incomplete: skipping secret creation")
+		if len(config.ContainerRegistrySecret) > 0 {
+			secretsData = fmt.Sprintf(",imagePullSecrets[0].name=%v", config.ContainerRegistrySecret)
+		}
 	}
 
 	// Deprecated functionality
@@ -223,24 +227,27 @@ func runKubectlDeploy(config kubernetesDeployOptions, command command.ExecRunner
 		kubeParams = append(kubeParams, fmt.Sprintf("--server=%v", config.APIServer))
 		kubeParams = append(kubeParams, fmt.Sprintf("--token=%v", config.KubeToken))
 	}
-
+	// ToDo : Do we need to keep secret creation behind a flag but rather based on the cpe values
 	if config.CreateDockerRegistrySecret {
-		if len(config.DockerConfigJSON) == 0 && (len(config.ContainerRegistryUser) == 0 || len(config.ContainerRegistryPassword) == 0) {
-			log.Entry().Fatal("Cannot create Container registry secret without proper registry username/password or docker config.json file")
+		if len(config.DockerConfigJSON) > 0 && (len(config.ContainerRegistryUser) > 0 && len(config.ContainerRegistryPassword) > 0) {
+			// ToDo: re-create the docker config json after pull https://github.com/SAP/jenkins-library/pull/3206 is merged
+
+			// first check if secret already exists
+			kubeCheckParams := append(kubeParams, "get", "secret", config.ContainerRegistrySecret)
+			if err := command.RunExecutable("kubectl", kubeCheckParams...); err != nil {
+				log.Entry().Infof("Registry secret '%v' does not exist, let's create it ...", config.ContainerRegistrySecret)
+				kubeSecretParams := defineKubeSecretParams(config, containerRegistry)
+				kubeSecretParams = append(kubeParams, kubeSecretParams...)
+				log.Entry().Infof("Creating container registry secret '%v'", config.ContainerRegistrySecret)
+				log.Entry().Debugf("Running kubectl with following parameters: %v", kubeSecretParams)
+				if err := command.RunExecutable("kubectl", kubeSecretParams...); err != nil {
+					log.Entry().WithError(err).Fatal("Creating container registry secret failed")
+				}
+			}
+		} else {
+			log.Entry().Info("No container registry credentials or docker config.json file provided or credentials incomplete: skipping secret creation")
 		}
 
-		// first check if secret already exists
-		kubeCheckParams := append(kubeParams, "get", "secret", config.ContainerRegistrySecret)
-		if err := command.RunExecutable("kubectl", kubeCheckParams...); err != nil {
-			log.Entry().Infof("Registry secret '%v' does not exist, let's create it ...", config.ContainerRegistrySecret)
-			kubeSecretParams := defineKubeSecretParams(config, containerRegistry)
-			kubeSecretParams = append(kubeParams, kubeSecretParams...)
-			log.Entry().Infof("Creating container registry secret '%v'", config.ContainerRegistrySecret)
-			log.Entry().Debugf("Running kubectl with following parameters: %v", kubeSecretParams)
-			if err := command.RunExecutable("kubectl", kubeSecretParams...); err != nil {
-				log.Entry().WithError(err).Fatal("Creating container registry secret failed")
-			}
-		}
 	}
 
 	appTemplate, err := ioutil.ReadFile(config.AppTemplate)

@@ -244,6 +244,11 @@ func kubernetesDeployMetadata() config.StepData {
 								Param: "password",
 								Type:  "secret",
 							},
+
+							{
+								Name:  "commonPipelineEnvironment",
+								Param: "custom/repositoryPassword",
+							},
 						},
 						Scope:     []string{"PARAMETERS", "STAGES", "STEPS"},
 						Type:      "string",
@@ -295,6 +300,11 @@ func kubernetesDeployMetadata() config.StepData {
 								Name:  "dockerCredentialsId",
 								Param: "username",
 								Type:  "secret",
+							},
+
+							{
+								Name:  "commonPipelineEnvironment",
+								Param: "custom/repositoryUsername",
 							},
 						},
 						Scope:     []string{"PARAMETERS", "STAGES", "STEPS"},

@@ -96,6 +96,8 @@ spec:
           - name: dockerCredentialsId
             type: secret
             param: password
+          - name: commonPipelineEnvironment
+            param: custom/repositoryPassword
       - name: containerImageName
         aliases:
           - name: dockerImageName
@@ -145,6 +147,8 @@ spec:
           - name: dockerCredentialsId
             type: secret
             param: username
+          - name: commonPipelineEnvironment
+            param: custom/repositoryUsername
       - name: containerRegistrySecret
         description: Name of the container registry secret used for pulling containers from the registry.
         longDescription: |-
