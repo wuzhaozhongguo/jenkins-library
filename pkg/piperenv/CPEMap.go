@@ -89,7 +89,7 @@ func dirToMap(m map[string]interface{}, dirPath, prefix string) error {
 		}
 		if toBeDeleted {
 			log.Entry().Infof("Rooster says removing  file from disk: %v", path.Join(dirPath, dirItem.Name()))
-			err := removeFileFromDisk(path.Join(dirPath, dirItem.Name()))
+			err := addEmptyValueToFile(path.Join(dirPath, dirItem.Name()))
 			if err != nil {
 				return err
 			}
@@ -103,7 +103,7 @@ func dirToMap(m map[string]interface{}, dirPath, prefix string) error {
 	return nil
 }
 
-func removeFileFromDisk(fullPath string) error {
+func addEmptyValueToFile(fullPath string) error {
 	err := ioutil.WriteFile(fullPath, []byte(""), 0666)
 	if err != nil {
 		return err
