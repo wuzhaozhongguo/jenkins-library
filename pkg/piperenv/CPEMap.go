@@ -93,7 +93,8 @@ func dirToMap(m map[string]interface{}, dirPath, prefix string) error {
 			if err != nil {
 				return err
 			}
-			continue
+			m[path.Join(prefix, mapKey)] = ""
+
 		} else {
 			m[path.Join(prefix, mapKey)] = value
 		}
