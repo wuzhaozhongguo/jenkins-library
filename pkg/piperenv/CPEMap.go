@@ -83,16 +83,16 @@ func dirToMap(m map[string]interface{}, dirPath, prefix string) error {
 			continue
 		}
 		// load file content and unmarshal it if needed
-		mapKey, value, toBeDeleted, err := readFileContent(path.Join(dirPath, dirItem.Name()))
+		mapKey, value, toBeEmptied, err := readFileContent(path.Join(dirPath, dirItem.Name()))
 		if err != nil {
 			return err
 		}
-		if toBeDeleted {
+		if toBeEmptied {
 			err := addEmptyValueToFile(path.Join(dirPath, dirItem.Name()))
 			if err != nil {
 				return err
 			}
-			log.Entry().Infof("Rooster says removing  file from disk and also writing empty value to cpeMap test: %v", path.Join(dirPath, dirItem.Name()))
+			log.Entry().Infof("Rooster says Writing empty contents to file on disk: %v %v", path.Join(dirPath, dirItem.Name()))
 			m[path.Join(prefix, mapKey)] = ""
 
 		} else {
@@ -112,11 +112,11 @@ func addEmptyValueToFile(fullPath string) error {
 }
 
 func readFileContent(fullPath string) (string, interface{}, bool, error) {
-	toBeDeleted := false
+	toBeEmptied := false
 
 	fileContent, err := ioutil.ReadFile(fullPath)
 	if err != nil {
-		return "", nil, toBeDeleted, err
+		return "", nil, toBeEmptied, err
 	}
 	fileName := filepath.Base(fullPath)
 
@@ -127,12 +127,12 @@ func readFileContent(fullPath string) (string, interface{}, bool, error) {
 		decoder.UseNumber()
 		err = decoder.Decode(&value)
 		if err != nil {
-			return "", nil, toBeDeleted, err
+			return "", nil, toBeEmptied, err
 		}
-		return strings.TrimSuffix(fileName, ".json"), value, toBeDeleted, nil
+		return strings.TrimSuffix(fileName, ".json"), value, toBeEmptied, nil
 	}
 	if string(fileContent) == "isDeleted" {
-		toBeDeleted = true
+		toBeEmptied = true
 	}
-	return fileName, string(fileContent), toBeDeleted, nil
+	return fileName, string(fileContent), toBeEmptied, nil
 }
