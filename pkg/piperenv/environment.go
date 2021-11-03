@@ -63,9 +63,24 @@ func writeToDisk(filename string, data []byte) error {
 	if len(data) > 0 {
 		log.Entry().Debugf("Writing file to disk: %v", filename)
 		return ioutil.WriteFile(filename, data, 0766)
+	} else {
+		// check if file exists
+
 	}
 	return nil
 }
+
+// func identifyDelete(filename string, data []byte) bool{
+// 	toBeDeleted := false
+
+// 	pipelineEnv, ok := os.LookupEnv("PIPER_pipelineEnv"); if !ok{
+// 		log.Entry().Debug("PIPER_pipelineEnv lookup failed skipping deletion of file: %v", filename)
+// 		return toBeDeleted
+// 	} else {
+
+// 	}
+// 	return toBeDeleted
+// }
 
 func readFromDisk(filename string) string {
 	//ToDo: if multiple files exist, read from latest file

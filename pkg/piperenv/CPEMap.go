@@ -103,8 +103,11 @@ func dirToMap(m map[string]interface{}, dirPath, prefix string) error {
 }
 
 func removeFileFromDisk(fullPath string) error {
-	err := os.RemoveAll(fullPath)
-	return err
+	err := ioutil.WriteFile(fullPath, []byte(""), 0666)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func readFileContent(fullPath string) (string, interface{}, bool, error) {
