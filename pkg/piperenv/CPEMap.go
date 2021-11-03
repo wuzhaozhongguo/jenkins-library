@@ -92,7 +92,7 @@ func dirToMap(m map[string]interface{}, dirPath, prefix string) error {
 			if err != nil {
 				return err
 			}
-			log.Entry().Infof("Rooster says removing  file from disk and also writing empty value to cpeMap: %v", path.Join(dirPath, dirItem.Name()))
+			log.Entry().Infof("Rooster says removing  file from disk and also writing empty value to cpeMap test: %v", path.Join(dirPath, dirItem.Name()))
 			m[path.Join(prefix, mapKey)] = ""
 
 		} else {
