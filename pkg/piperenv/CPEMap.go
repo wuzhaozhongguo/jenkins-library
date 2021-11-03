@@ -88,11 +88,11 @@ func dirToMap(m map[string]interface{}, dirPath, prefix string) error {
 			return err
 		}
 		if toBeDeleted {
-			log.Entry().Infof("Rooster says removing  file from disk: %v", path.Join(dirPath, dirItem.Name()))
 			err := addEmptyValueToFile(path.Join(dirPath, dirItem.Name()))
 			if err != nil {
 				return err
 			}
+			log.Entry().Infof("Rooster says removing  file from disk and also writing empty value to cpeMap: %v", path.Join(dirPath, dirItem.Name()))
 			m[path.Join(prefix, mapKey)] = ""
 
 		} else {
