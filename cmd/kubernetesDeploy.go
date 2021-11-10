@@ -340,7 +340,6 @@ func defineKubeSecretParams(config kubernetesDeployOptions, containerRegistry st
 	if len(config.DockerConfigJSON) > 0 {
 		return append(
 			kubeSecretParams,
-			"generic",
 			config.ContainerRegistrySecret,
 			"--save-config",
 			"--dry-run=client",
