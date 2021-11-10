@@ -232,29 +232,30 @@ func runKubectlDeploy(config kubernetesDeployOptions, command command.ExecRunner
 		kubeParams = append(kubeParams, fmt.Sprintf("--token=%v", config.KubeToken))
 	}
 	// ToDo : Do we need to keep secret creation behind a flag but rather based on the cpe values
-	if config.CreateDockerRegistrySecret {
-		if len(config.DockerConfigJSON) > 0 && (len(config.ContainerRegistryUser) > 0 && len(config.ContainerRegistryPassword) > 0) {
-			_, err := docker.CreateDockerConfigJSON(config.ContainerRegistryURL, config.ContainerRegistryUser, config.ContainerRegistryPassword, "", config.DockerConfigJSON, fileUtils)
+	// if config.CreateDockerRegistrySecret {
+	if len(config.DockerConfigJSON) > 0 && (len(config.ContainerRegistryUser) > 0 && len(config.ContainerRegistryPassword) > 0) {
+		log.Entry().Infof("Creating docker config json file")
+		_, err := docker.CreateDockerConfigJSON(config.ContainerRegistryURL, config.ContainerRegistryUser, config.ContainerRegistryPassword, "", config.DockerConfigJSON, fileUtils)
 
-			if err != nil {
-				log.Entry().Warningf("failed to update Docker config.json: %v", err)
-			}
-
-			if len(config.ContainerRegistrySecret) <= 0 {
-				return fmt.Errorf("container registry secret not provided, please configure containerRegistrySecret parameter ")
-			}
-
-			kubeSecretParams := defineKubeSecretParams(config, containerRegistry)
-			kubeSecretParams = append(kubeParams, kubeSecretParams...)
-			log.Entry().Infof("Creating container registry secret '%v'", config.ContainerRegistrySecret)
-			log.Entry().Debugf("Running kubectl with following parameters: %v", kubeSecretParams)
-			if err := command.RunExecutable("kubectl", kubeSecretParams...); err != nil {
-				log.Entry().WithError(err).Fatal("Creating container registry secret failed")
-			}
-
-		} else {
-			log.Entry().Info("No container registry credentials or docker config.json file provided or credentials incomplete: skipping secret creation")
+		if err != nil {
+			log.Entry().Warningf("failed to update Docker config.json: %v", err)
 		}
+
+		if len(config.ContainerRegistrySecret) <= 0 {
+			return fmt.Errorf("container registry secret not provided, please configure containerRegistrySecret parameter ")
+		}
+
+		kubeSecretParams := defineKubeSecretParams(config, containerRegistry)
+		kubeSecretParams = append(kubeParams, kubeSecretParams...)
+		log.Entry().Infof("Creating container registry secret '%v'", config.ContainerRegistrySecret)
+		log.Entry().Infof("Running kubectl with following parameters: %v", kubeSecretParams)
+		if err := command.RunExecutable("kubectl", kubeSecretParams...); err != nil {
+			log.Entry().WithError(err).Fatal("Creating container registry secret failed")
+		}
+
+		// } else {
+		log.Entry().Info("No container registry credentials or docker config.json file provided or credentials incomplete: skipping secret creation")
+		// }
 	}
 
 	appTemplate, err := ioutil.ReadFile(config.AppTemplate)
