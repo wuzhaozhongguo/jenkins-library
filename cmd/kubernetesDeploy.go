@@ -341,7 +341,6 @@ func defineKubeSecretParams(config kubernetesDeployOptions, containerRegistry st
 		return append(
 			kubeSecretParams,
 			config.ContainerRegistrySecret,
-			"--save-config",
 			"--dry-run=client",
 			fmt.Sprintf("--from-file=.dockerconfigjson=%v", config.DockerConfigJSON),
 			"--type=kubernetes.io/dockerconfigjson",
