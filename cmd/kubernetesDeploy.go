@@ -214,8 +214,8 @@ func runKubectlDeploy(config kubernetesDeployOptions, command command.ExecRunner
 	}
 
 	kubeParams := []string{
-		"--insecure-skip-tls-verify=true",
-		fmt.Sprintf("--namespace=%v", config.Namespace),
+		//"--insecure-skip-tls-verify=true",
+		//fmt.Sprintf("--namespace=%v", config.Namespace),
 	}
 
 	if len(config.KubeConfig) > 0 {
@@ -341,8 +341,9 @@ func defineKubeSecretParams(config kubernetesDeployOptions, containerRegistry st
 		return append(
 			kubeSecretParams,
 			config.ContainerRegistrySecret,
-			//"--dry-run=client",
+			"generic",
 			fmt.Sprintf("--from-file=.dockerconfigjson=%v", config.DockerConfigJSON),
+			"--dry-run=client",
 			"--type=kubernetes.io/dockerconfigjson",
 			"--output=yaml",
 			"|  kubectl apply -f -",
