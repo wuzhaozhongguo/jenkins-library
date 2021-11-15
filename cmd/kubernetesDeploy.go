@@ -214,8 +214,8 @@ func runKubectlDeploy(config kubernetesDeployOptions, command command.ExecRunner
 	}
 
 	kubeParams := []string{
-		"--insecure-skip-tls-verify=true",
-		fmt.Sprintf("--namespace=%v", config.Namespace),
+		// "--insecure-skip-tls-verify=true",
+		// fmt.Sprintf("--namespace=%v", config.Namespace),
 	}
 
 	if len(config.KubeConfig) > 0 {
@@ -328,6 +328,9 @@ func defineKubeSecretParams(config kubernetesDeployOptions, containerRegistry st
 		"create",
 		"secret",
 		"generic",
+	}
+	if len(config.Namespace) > 0 {
+		kubeSecretParams = append(kubeSecretParams, config.Namespace)
 	}
 	if config.DeployTool == "helm" || config.DeployTool == "helm3" {
 		kubeSecretParams = append(
