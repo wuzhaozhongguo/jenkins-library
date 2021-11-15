@@ -327,7 +327,7 @@ func defineKubeSecretParams(config kubernetesDeployOptions, containerRegistry st
 	kubeSecretParams := []string{
 		"create",
 		"secret",
-		"generic",
+		//"generic",
 	}
 
 	if config.DeployTool == "helm" || config.DeployTool == "helm3" {
