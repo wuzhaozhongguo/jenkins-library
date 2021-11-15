@@ -329,9 +329,7 @@ func defineKubeSecretParams(config kubernetesDeployOptions, containerRegistry st
 		"secret",
 		"generic",
 	}
-	if len(config.Namespace) > 0 {
-		kubeSecretParams = append(kubeSecretParams, config.Namespace)
-	}
+
 	if config.DeployTool == "helm" || config.DeployTool == "helm3" {
 		kubeSecretParams = append(
 			kubeSecretParams,
@@ -342,9 +340,12 @@ func defineKubeSecretParams(config kubernetesDeployOptions, containerRegistry st
 	}
 
 	if len(config.DockerConfigJSON) > 0 {
+		kubeSecretParams = append(kubeSecretParams, config.ContainerRegistrySecret)
+		if len(config.Namespace) > 0 {
+			kubeSecretParams = append(kubeSecretParams, fmt.Sprintf("--namespace=%v", config.Namespace))
+		}
 		return append(
 			kubeSecretParams,
-			config.ContainerRegistrySecret,
 			"--save-config",
 			"--dry-run=client",
 			fmt.Sprintf("--from-file=.dockerconfigjson=%v", config.DockerConfigJSON),
