@@ -296,6 +296,8 @@ func PrepareConfig(cmd *cobra.Command, metadata *config.StepData, stepName strin
 	var myConfig config.Config
 	var stepConfig config.StepConfig
 
+	log.Entry().Infof("INFO from metadata %s", metadata.Spec.Containers[0].Image)
+
 	// add vault credentials so that configuration can be fetched from vault
 	if GeneralConfig.VaultRoleID == "" {
 		GeneralConfig.VaultRoleID = os.Getenv("PIPER_vaultAppRoleID")

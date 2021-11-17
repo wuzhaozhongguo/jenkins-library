@@ -268,6 +268,8 @@ func (c *Config) GetStepConfig(flagValues map[string]interface{}, paramJSON stri
 			}
 		}
 	}
+
+	log.Entry().Infof("INFO from stepConfig %s", stepConfig)
 	return stepConfig, nil
 }
 
