@@ -235,11 +235,13 @@ func runMtaBuild(config mtaBuildOptions,
 	}
 
 	log.Entry().Infof("creating build settings information...")
+	dockerImage := os.Getenv("DOCKER_IMAGE")
 	mtaConfig := buildsettings.BuildOptions{
 		Profiles:           config.Profiles,
 		GlobalSettingsFile: config.GlobalSettingsFile,
 		Publish:            config.Publish,
 		BuildSettingsInfo:  config.BuildSettingsInfo,
+		DockerImage:        dockerImage,
 	}
 	builSettings, err := buildsettings.CreateBuildSettingsInfo(&mtaConfig, "mtaBuild")
 	if err != nil {

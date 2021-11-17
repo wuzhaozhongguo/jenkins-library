@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/SAP/jenkins-library/pkg/buildsettings"
 	"github.com/SAP/jenkins-library/pkg/log"
 	"github.com/SAP/jenkins-library/pkg/npm"
@@ -48,11 +50,13 @@ func runNpmExecuteScripts(npmExecutor npm.Executor, config *npmExecuteScriptsOpt
 	}
 
 	log.Entry().Infof("creating build settings information...")
+	dockerImage := os.Getenv("DOCKER_IMAGE")
 	npmConfig := buildsettings.BuildOptions{
 		Publish:            config.Publish,
 		CreateBOM:          config.CreateBOM,
 		DefaultNpmRegistry: config.DefaultNpmRegistry,
 		BuildSettingsInfo:  config.BuildSettingsInfo,
+		DockerImage:        dockerImage,
 	}
 	builSettings, err := buildsettings.CreateBuildSettingsInfo(&npmConfig, "npmExecuteScripts")
 	if err != nil {
