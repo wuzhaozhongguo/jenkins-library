@@ -269,7 +269,7 @@ func (c *Config) GetStepConfig(flagValues map[string]interface{}, paramJSON stri
 		}
 	}
 
-	log.Entry().Infof("INFO from stepConfig %s", stepConfig)
+	log.Entry().Infof("INFO from stepConfig %s", stepConfig.Config["dockerImage"])
 	return stepConfig, nil
 }
 
