@@ -371,45 +371,6 @@ func PrepareConfig(cmd *cobra.Command, metadata *config.StepData, stepName strin
 
 	retrieveHookConfig(stepConfig.HookConfig, &GeneralConfig.HookConfig)
 
-	if stepConfig.Config["dockerImage"] == nil {
-		var myTestConfig config.Config
-		var stepTestConfig config.StepConfig
-		// use config & defaults
-		var customConfig io.ReadCloser
-		//accept that config file and defaults cannot be loaded since both are not mandatory here
-		{
-			projectConfigFile := getProjectConfigFile(GeneralConfig.CustomConfig)
-			if exists, err := piperutils.FileExists(projectConfigFile); exists {
-				log.Entry().Infof("Project config: '%s'", projectConfigFile)
-				if customConfig, err = openFile(projectConfigFile, GeneralConfig.GitHubAccessTokens); err != nil {
-					return errors.Wrapf(err, "Cannot read '%s'", projectConfigFile)
-				}
-			} else {
-				log.Entry().Infof("Project config: NONE ('%s' does not exist)", projectConfigFile)
-				customConfig = nil
-			}
-		}
-		var defaultConfig []io.ReadCloser
-		if len(GeneralConfig.DefaultConfig) == 0 {
-			log.Entry().Info("Project defaults: NONE")
-		}
-		for _, projectDefaultFile := range GeneralConfig.DefaultConfig {
-			fc, err := openFile(projectDefaultFile, GeneralConfig.GitHubAccessTokens)
-			// only create error for non-default values
-			if err != nil {
-				if projectDefaultFile != ".pipeline/defaults.yaml" {
-					log.Entry().Infof("Project defaults: '%s'", projectDefaultFile)
-					return errors.Wrapf(err, "Cannot read '%s'", projectDefaultFile)
-				}
-			} else {
-				log.Entry().Infof("Project defaults: '%s'", projectDefaultFile)
-				defaultConfig = append(defaultConfig, fc)
-			}
-		}
-		stepTestConfig, _ = myTestConfig.GetStepConfig(flagValues, GeneralConfig.ParametersJSON, customConfig, defaultConfig, GeneralConfig.IgnoreCustomDefaults, filters, metadata.Spec.Inputs.Parameters, metadata.Spec.Inputs.Secrets, resourceParams, GeneralConfig.StageName, stepName, metadata.Metadata.Aliases)
-		log.Entry().Info("Print stepTestConfig ", stepTestConfig)
-	}
-
 	return nil
 }
 
