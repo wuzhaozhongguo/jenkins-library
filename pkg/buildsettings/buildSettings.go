@@ -2,6 +2,7 @@ package buildsettings
 
 import (
 	"encoding/json"
+	"os"
 	"reflect"
 
 	"github.com/SAP/jenkins-library/pkg/log"
@@ -47,6 +48,8 @@ func CreateBuildSettingsInfo(config *BuildOptions, buildTool string) (string, er
 	}
 	var jsonMap map[string][]interface{}
 	var jsonResult []byte
+
+	log.Entry().Infof("Docker image is ", os.Getenv("DOCKER_IMAGE"))
 
 	if config.BuildSettingsInfo != "" {
 

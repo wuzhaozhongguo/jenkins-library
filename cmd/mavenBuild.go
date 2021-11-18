@@ -87,6 +87,7 @@ func runMavenBuild(config *mavenBuildOptions, telemetryData *telemetry.CustomDat
 
 	log.Entry().Infof("creating build settings information...")
 	dockerImage := os.Getenv("DOCKER_IMAGE")
+	log.Entry().Infof("Docker image is ", os.Getenv("DOCKER_IMAGE"))
 	mavenConfig := buildsettings.BuildOptions{
 		Profiles:                    config.Profiles,
 		GlobalSettingsFile:          config.GlobalSettingsFile,
