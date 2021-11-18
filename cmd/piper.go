@@ -372,13 +372,12 @@ func PrepareConfig(cmd *cobra.Command, metadata *config.StepData, stepName strin
 	retrieveHookConfig(stepConfig.HookConfig, &GeneralConfig.HookConfig)
 
 	if stepConfig.Config["dockerImage"] != nil {
-		dockerImage, ok := stepConfig.Config["dockerImage"].(string)
-		if ok {
-			os.Setenv("DOCKER_IMAGE", dockerImage)
-			log.Entry().Infof("Docker image is ", os.Getenv("DOCKER_IMAGE"))
-		}
-	} else {
-		os.Setenv("DOCKER_IMAGE", "docker.wdf.sap.corp:50000/maven:3.9-jdk-8")
+		var myTestConfig config.Config
+		var stepTestConfig config.StepConfig
+		var customConfig io.ReadCloser
+		var defaultConfig []io.ReadCloser
+		stepTestConfig, _ = myTestConfig.GetStepConfig(flagValues, GeneralConfig.ParametersJSON, customConfig, defaultConfig, GeneralConfig.IgnoreCustomDefaults, filters, metadata.Spec.Inputs.Parameters, metadata.Spec.Inputs.Secrets, resourceParams, GeneralConfig.StageName, stepName, metadata.Metadata.Aliases)
+		log.Entry().Info("Print", stepTestConfig)
 	}
 
 	return nil
