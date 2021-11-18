@@ -371,7 +371,7 @@ func PrepareConfig(cmd *cobra.Command, metadata *config.StepData, stepName strin
 
 	retrieveHookConfig(stepConfig.HookConfig, &GeneralConfig.HookConfig)
 
-	if stepConfig.Config["dockerImage"] != nil {
+	if stepConfig.Config["dockerImage"] == nil {
 		var myTestConfig config.Config
 		var stepTestConfig config.StepConfig
 		var customConfig io.ReadCloser
