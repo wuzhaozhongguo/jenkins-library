@@ -86,8 +86,9 @@ func runMavenBuild(config *mavenBuildOptions, telemetryData *telemetry.CustomDat
 	_, err := maven.Execute(&mavenOptions, utils)
 
 	log.Entry().Infof("creating build settings information...")
-	dockerImage := os.Getenv("MAVEN_VERSION")
-	log.Entry().Infof("Docker image is ", os.Getenv("DOCKER_IMAGE"))
+	os.Setenv("DOCKER_IMAGE", "docker.wdf.sap.corp:50000/maven:3.6.1s-jdk-8")
+	dockerImage := os.Getenv("DOCKER_IMAGE")
+	log.Entry().Infof("Docker image is ", dockerImage)
 	mavenConfig := buildsettings.BuildOptions{
 		Profiles:                    config.Profiles,
 		GlobalSettingsFile:          config.GlobalSettingsFile,
