@@ -275,6 +275,7 @@ func (c *Config) GetStepConfig(flagValues map[string]interface{}, paramJSON stri
 			os.Setenv("DOCKER_IMAGE", dockerImage)
 		}
 	}
+	log.Entry().Infof("Docker image is ", os.Getenv("DOCKER_IMAGE"))
 	return stepConfig, nil
 }
 
