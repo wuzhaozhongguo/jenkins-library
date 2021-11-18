@@ -376,7 +376,6 @@ func PrepareConfig(cmd *cobra.Command, metadata *config.StepData, stepName strin
 		var stepTestConfig config.StepConfig
 		// use config & defaults
 		var customConfig io.ReadCloser
-		var err error
 		//accept that config file and defaults cannot be loaded since both are not mandatory here
 		{
 			projectConfigFile := getProjectConfigFile(GeneralConfig.CustomConfig)
