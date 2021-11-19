@@ -239,7 +239,7 @@ func (c *Config) GetStepConfig(flagValues map[string]interface{}, paramJSON stri
 			os.Setenv("DOCKER_IMAGE", dockerImage)
 		}
 	}
-	log.Entry().Infof("Docker image is ", os.Getenv("DOCKER_IMAGE"))
+	log.Entry().Infof("Docker image is %s", os.Getenv("DOCKER_IMAGE"))
 
 	stepConfig.mixinVaultConfig(parameters, c.General, c.Steps[stepName], c.Stages[stageName])
 	// check whether vault should be skipped
