@@ -156,6 +156,7 @@ func generateConfig(utils getConfigUtils) error {
 			params = metadata.Spec.Inputs.Parameters
 		}
 
+		log.Entry().Infof("Printing values before GetStepConfig : %v", stepConfig)
 		stepConfig, err = myConfig.GetStepConfig(flags, GeneralConfig.ParametersJSON, customConfig, defaultConfig, GeneralConfig.IgnoreCustomDefaults, paramFilter, params, metadata.Spec.Inputs.Secrets, resourceParams, GeneralConfig.StageName, metadata.Metadata.Name, metadata.Metadata.Aliases)
 		if err != nil {
 			return errors.Wrap(err, "getting step config failed")
