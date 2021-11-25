@@ -160,7 +160,7 @@ func generateConfig(utils getConfigUtils) error {
 		if err != nil {
 			return errors.Wrap(err, "getting step config failed")
 		}
-		log.Entry().Debugf("Printing values from : %v", stepConfig)
+		log.Entry().Infof("Printing values from : %v", stepConfig)
 
 		// apply context conditions if context configuration is requested
 		if configOptions.contextConfig {
