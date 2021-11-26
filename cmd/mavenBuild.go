@@ -273,23 +273,23 @@ func getDockerImageValue(stepName string) (string, error) {
 
 		customConfig, err := configOptions.openFile(projectConfigFile, GeneralConfig.GitHubAccessTokens)
 		if err != nil {
-			// if !os.IsNotExist(err) {
-			// 	return errors.Wrapf(err, "config: open configuration file '%v' failed", projectConfigFile)
-			// }
+			if !os.IsNotExist(err) {
+				return "", errors.Wrapf(err, "config: open configuration file '%v' failed", projectConfigFile)
+			}
 			customConfig = nil
 		}
 
 		defaultConfig, paramFilter, err := defaultsAndFilters(&metadata, metadata.Metadata.Name)
-		// if err != nil {
-		// 	return errors.Wrap(err, "defaults: retrieving step defaults failed")
-		// }
+		if err != nil {
+			return "", errors.Wrap(err, "defaults: retrieving step defaults failed")
+		}
 
 		for _, f := range GeneralConfig.DefaultConfig {
 			fc, err := configOptions.openFile(f, GeneralConfig.GitHubAccessTokens)
 			// only create error for non-default values
-			// if err != nil && f != ".pipeline/defaults.yaml" {
-			// 	return errors.Wrapf(err, "config: getting defaults failed: '%v'", f)
-			// }
+			if err != nil && f != ".pipeline/defaults.yaml" {
+				return "", errors.Wrapf(err, "config: getting defaults failed: '%v'", f)
+			}
 			if err == nil {
 				defaultConfig = append(defaultConfig, fc)
 			}
