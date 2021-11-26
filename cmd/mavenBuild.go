@@ -10,6 +10,7 @@ import (
 
 	"github.com/SAP/jenkins-library/pkg/buildsettings"
 	"github.com/SAP/jenkins-library/pkg/command"
+	"github.com/SAP/jenkins-library/pkg/config"
 	conf "github.com/SAP/jenkins-library/pkg/config"
 	"github.com/SAP/jenkins-library/pkg/log"
 	"github.com/SAP/jenkins-library/pkg/maven"
@@ -89,23 +90,9 @@ func runMavenBuild(config *mavenBuildOptions, telemetryData *telemetry.CustomDat
 
 	log.Entry().Debugf("creating build settings information...")
 	stepName := "mavenBuild"
-	var dockerImage string
-	var dataParametersJSON map[string]interface{}
-	var errUnmarshal = json.Unmarshal([]byte(GeneralConfig.ParametersJSON), &dataParametersJSON)
-	if errUnmarshal != nil {
-		log.Entry().Infof("Reading ParametersJSON is failed")
-	}
-	if value, ok := dataParametersJSON["dockerImage"]; ok {
-		dockerImage = value.(string)
-	} else {
-		metadata, err := conf.ResolveMetadata(GeneralConfig.GitHubAccessTokens, GetAllStepMetadata, GeneralConfig.StepMetadata, stepName)
-		if err != nil {
-			log.Entry().Warnf("failed to resolve metadata: %v", err)
-		}
-		containers := metadata.Spec.Containers
-		if len(containers) > 0 {
-			dockerImage = containers[0].Image
-		}
+	dockerImage, err := getDockerImageValue(stepName)
+	if err != nil {
+		log.Entry().Warnf("failed to get value of dockerImage: %v", err)
 	}
 	mavenConfig := buildsettings.BuildOptions{
 		Profiles:                    config.Profiles,
@@ -262,4 +249,72 @@ func getTempDirForCertFile() string {
 		log.Entry().WithError(err).WithField("path", tmpFolder).Debug("Creating temp directory failed")
 	}
 	return tmpFolder
+}
+
+func getDockerImageValue(stepName string) (string, error) {
+	var dockerImage string
+	var dataParametersJSON map[string]interface{}
+	var errUnmarshal = json.Unmarshal([]byte(GeneralConfig.ParametersJSON), &dataParametersJSON)
+	if errUnmarshal != nil {
+		log.Entry().Infof("Reading ParametersJSON is failed")
+	}
+	if value, ok := dataParametersJSON["dockerImage"]; ok {
+		dockerImage = value.(string)
+	} else {
+		var myConfig config.Config
+		var stepConfig config.StepConfig
+
+		metadata, err := conf.ResolveMetadata(GeneralConfig.GitHubAccessTokens, GetAllStepMetadata, GeneralConfig.StepMetadata, stepName)
+		if err != nil {
+			log.Entry().Warnf("failed to resolve metadata: %v", err)
+		}
+
+		projectConfigFile := getProjectConfigFile(GeneralConfig.CustomConfig)
+
+		customConfig, err := configOptions.openFile(projectConfigFile, GeneralConfig.GitHubAccessTokens)
+		if err != nil {
+			// if !os.IsNotExist(err) {
+			// 	return errors.Wrapf(err, "config: open configuration file '%v' failed", projectConfigFile)
+			// }
+			customConfig = nil
+		}
+
+		defaultConfig, paramFilter, err := defaultsAndFilters(&metadata, metadata.Metadata.Name)
+		// if err != nil {
+		// 	return errors.Wrap(err, "defaults: retrieving step defaults failed")
+		// }
+
+		for _, f := range GeneralConfig.DefaultConfig {
+			fc, err := configOptions.openFile(f, GeneralConfig.GitHubAccessTokens)
+			// only create error for non-default values
+			// if err != nil && f != ".pipeline/defaults.yaml" {
+			// 	return errors.Wrapf(err, "config: getting defaults failed: '%v'", f)
+			// }
+			if err == nil {
+				defaultConfig = append(defaultConfig, fc)
+			}
+		}
+		var flags map[string]interface{}
+		resourceParams := metadata.GetResourceParameters(GeneralConfig.EnvRootPath, "commonPipelineEnvironment")
+		params := []config.StepParameters{}
+		if !configOptions.contextConfig {
+			params = metadata.Spec.Inputs.Parameters
+		}
+
+		stepConfig, err = myConfig.GetStepConfig(flags, GeneralConfig.ParametersJSON, customConfig, defaultConfig, GeneralConfig.IgnoreCustomDefaults, paramFilter, params, metadata.Spec.Inputs.Secrets, resourceParams, GeneralConfig.StageName, metadata.Metadata.Name, metadata.Metadata.Aliases)
+		if err != nil {
+			return "", errors.Wrap(err, "getting step config failed")
+		}
+		log.Entry().Infof("Printing stepConfig: %v", stepConfig)
+
+		containers := metadata.Spec.Containers
+		if len(containers) > 0 {
+			dockerImage = containers[0].Image
+		}
+	}
+
+	if dockerImage != "" {
+		return dockerImage, nil
+	}
+	return "", nil
 }
