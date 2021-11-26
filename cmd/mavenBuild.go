@@ -11,7 +11,6 @@ import (
 	"github.com/SAP/jenkins-library/pkg/buildsettings"
 	"github.com/SAP/jenkins-library/pkg/command"
 	"github.com/SAP/jenkins-library/pkg/config"
-	conf "github.com/SAP/jenkins-library/pkg/config"
 	"github.com/SAP/jenkins-library/pkg/log"
 	"github.com/SAP/jenkins-library/pkg/maven"
 	"github.com/SAP/jenkins-library/pkg/piperutils"
@@ -264,10 +263,15 @@ func getDockerImageValue(stepName string) (string, error) {
 		var myConfig config.Config
 		var stepConfig config.StepConfig
 
-		metadata, err := conf.ResolveMetadata(GeneralConfig.GitHubAccessTokens, GetAllStepMetadata, GeneralConfig.StepMetadata, stepName)
+		log.Entry().Infof("Printing stepName %s", stepName)
+		metadata, err := config.ResolveMetadata(GeneralConfig.GitHubAccessTokens, GetAllStepMetadata, configOptions.stepMetadata, stepName)
 		if err != nil {
-			log.Entry().Warnf("failed to resolve metadata: %v", err)
+			return "", errors.Wrapf(err, "failed to resolve metadata")
 		}
+
+		prepareOutputEnvironment(metadata.Spec.Outputs.Resources, GeneralConfig.EnvRootPath)
+
+		resourceParams := metadata.GetResourceParameters(GeneralConfig.EnvRootPath, "commonPipelineEnvironment")
 
 		projectConfigFile := getProjectConfigFile(GeneralConfig.CustomConfig)
 
@@ -294,8 +298,9 @@ func getDockerImageValue(stepName string) (string, error) {
 				defaultConfig = append(defaultConfig, fc)
 			}
 		}
+
 		var flags map[string]interface{}
-		resourceParams := metadata.GetResourceParameters(GeneralConfig.EnvRootPath, "commonPipelineEnvironment")
+
 		params := []config.StepParameters{}
 		if !configOptions.contextConfig {
 			params = metadata.Spec.Inputs.Parameters
@@ -305,11 +310,12 @@ func getDockerImageValue(stepName string) (string, error) {
 		if err != nil {
 			return "", errors.Wrap(err, "getting step config failed")
 		}
-		log.Entry().Infof("Printing stepConfig: %v", stepConfig)
+		log.Entry().Infof("getConfig printing stepConfig: %v", stepConfig)
 
 		containers := metadata.Spec.Containers
 		if len(containers) > 0 {
 			dockerImage = containers[0].Image
+
 		}
 	}
 
