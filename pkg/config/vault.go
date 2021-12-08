@@ -14,20 +14,24 @@ import (
 )
 
 const (
-	vaultRootPaths                      = "vaultRootPaths"
-	vaultTestCredentialPath             = "vaultTestCredentialPath"
-	vaultTestCredentialKeys             = "vaultTestCredentialKeys"
-	vaultAppRoleID                      = "vaultAppRoleID"
-	vaultAppRoleSecretID                = "vaultAppRoleSecreId"
-	vaultServerUrl                      = "vaultServerUrl"
-	vaultNamespace                      = "vaultNamespace"
-	vaultBasePath                       = "vaultBasePath"
-	vaultPipelineName                   = "vaultPipelineName"
-	vaultPath                           = "vaultPath"
-	skipVault                           = "skipVault"
-	vaultDisableOverwrite               = "vaultDisableOverwrite"
-	vaultTestCredentialEnvPrefix        = "vaultTestCredentialEnvPrefix"
-	vaultTestCredentialEnvPrefixDefault = "PIPER_TESTCREDENTIAL_"
+	vaultRootPaths                         = "vaultRootPaths"
+	vaultTestCredentialPath                = "vaultTestCredentialPath"
+	vaultCredentialPath                    = "vaultCredentialPath"
+	vaultTestCredentialKeys                = "vaultTestCredentialKeys"
+	vaultCredentialKeys                    = "vaultCredentialKeys"
+	vaultAppRoleID                         = "vaultAppRoleID"
+	vaultAppRoleSecretID                   = "vaultAppRoleSecreId"
+	vaultServerUrl                         = "vaultServerUrl"
+	vaultNamespace                         = "vaultNamespace"
+	vaultBasePath                          = "vaultBasePath"
+	vaultPipelineName                      = "vaultPipelineName"
+	vaultPath                              = "vaultPath"
+	skipVault                              = "skipVault"
+	vaultDisableOverwrite                  = "vaultDisableOverwrite"
+	vaultTestCredentialEnvPrefix           = "vaultTestCredentialEnvPrefix"
+	vaultCredentialEnvPrefix               = "vaultCredentialEnvPrefix"
+	vaultTestCredentialEnvPrefixDefault    = "PIPER_TESTCREDENTIAL_"
+	vaultTestCredentialEnvPrefixDefaultNew = "PIPER_VAULTCREDENTIAL_"
 )
 
 var (
@@ -45,6 +49,9 @@ var (
 		vaultTestCredentialPath,
 		vaultTestCredentialKeys,
 		vaultTestCredentialEnvPrefix,
+		vaultCredentialPath,
+		vaultCredentialKeys,
+		vaultCredentialEnvPrefix,
 	}
 
 	// VaultRootPaths are the lookup paths piper tries to use during the vault lookup.
@@ -164,7 +171,11 @@ func resolveVaultReference(ref *ResourceReference, config *StepConfig, client va
 
 // resolve test credential keys and expose as environment variables
 func resolveVaultTestCredentials(config *StepConfig, client vaultClient) {
-	credPath, pathOk := config.Config[vaultTestCredentialPath].(string)
+	credPath, pathOk := config.Config[vaultCredentialPath].(string)
+	if !pathOk || len(credPath) == 0 {
+		credPath, pathOk = config.Config[vaultTestCredentialPath].(string)
+	}
+
 	keys := getTestCredentialKeys(config)
 	if !(pathOk && keys != nil) || credPath == "" || len(keys) == 0 {
 		log.Entry().Debugf("Not fetching test credentials from vault since they are not (properly) configured")
@@ -217,6 +228,19 @@ func populateTestCredentialsAsEnvs(config *StepConfig, secret map[string]string,
 			}
 		}
 	}
+	// always create new fixed envionment environment variables
+	for secretKey, secretValue := range secret {
+		for _, key := range keys {
+			if secretKey == key {
+				log.RegisterSecret(secretValue)
+				envVariable := vaultTestCredentialEnvPrefixDefaultNew + convertEnvVar(secretKey)
+				log.Entry().Debugf("Exposing test credential '%v' as '%v'", key, envVariable)
+				os.Setenv(envVariable, secretValue)
+				matched = true
+			}
+		}
+	}
+
 	return
 }
 
