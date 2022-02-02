@@ -3,8 +3,9 @@ package telemetry
 import (
 	"crypto/sha1"
 	"fmt"
-	"github.com/SAP/jenkins-library/pkg/orchestrator"
 	"time"
+
+	"github.com/SAP/jenkins-library/pkg/orchestrator"
 
 	"net/http"
 	"net/url"
@@ -39,7 +40,7 @@ type Telemetry struct {
 }
 
 // Initialize sets up the base telemetry data and is called in generated part of the steps
-func (t *Telemetry) Initialize(telemetryDisabled bool, stepName string) {
+func (t *Telemetry) Initialize(telemetryDisabled bool, stepName, image, buildTool string) {
 	t.disabled = telemetryDisabled
 
 	provider, err := orchestrator.NewOrchestratorSpecificConfigProvider()
@@ -78,6 +79,8 @@ func (t *Telemetry) Initialize(telemetryDisabled bool, stepName string) {
 		ActionName:      actionName,
 		EventType:       eventType,
 		StepName:        stepName,
+		Image:           image,
+		BuildTool:       buildTool,
 		SiteID:          t.SiteID,
 		PipelineURLHash: t.getPipelineURLHash(), // http://server:port/jenkins/job/foo/
 		BuildURLHash:    t.getBuildURLHash(),    // http://server:port/jenkins/job/foo/15/
