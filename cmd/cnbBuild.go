@@ -274,18 +274,18 @@ func linkTargetFolder(utils cnbutils.BuildUtils, source, target string) error {
 	return utils.Symlink(targetPath, linkPath)
 }
 
-func (c *cnbBuildOptions) mergeEnvVars(vars map[string]interface{}) {
-	if c.BuildEnvVars == nil {
-		c.BuildEnvVars = vars
+func (config *cnbBuildOptions) mergeEnvVars(vars map[string]interface{}) {
+	if config.BuildEnvVars == nil {
+		config.BuildEnvVars = vars
 
 		return
 	}
 
 	for k, v := range vars {
-		_, exists := c.BuildEnvVars[k]
+		_, exists := config.BuildEnvVars[k]
 
 		if !exists {
-			c.BuildEnvVars[k] = v
+			config.BuildEnvVars[k] = v
 		}
 	}
 }

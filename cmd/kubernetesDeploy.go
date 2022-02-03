@@ -93,7 +93,7 @@ func runHelmDeploy(config kubernetesDeployOptions, utils kubernetesDeployUtils, 
 	if err != nil {
 		log.Entry().WithError(err).Fatalf("Container registry url '%v' incorrect", config.ContainerRegistryURL)
 	}
-	//support either image or containerImageName and containerImageTag
+	// support either image or containerImageName and containerImageTag
 	containerImageName := ""
 	containerImageTag := ""
 
@@ -129,6 +129,19 @@ func runHelmDeploy(config kubernetesDeployOptions, utils kubernetesDeployUtils, 
 		if err := utils.RunExecutable("helm", initParams...); err != nil {
 			log.Entry().WithError(err).Fatal("Helm init call failed")
 		}
+	}
+
+	if config.HelmRepositories != nil {
+		for name, repo := range config.HelmRepositories {
+			log.Entry().Debugf("Adding helm repository \"%v\" with the name \"%s\"", repo, name)
+			if err := utils.RunExecutable("helm", "repo", "add", name, fmt.Sprintf("%v", repo)); err != nil {
+				log.Entry().WithError(err).Fatal("Adding Helm repository failed")
+			}
+		}
+	}
+
+	if err := utils.RunExecutable("helm", "dep", "build", config.ChartPath); err != nil {
+		log.Entry().WithError(err).Fatal("Failed to build chart dependencies")
 	}
 
 	var secretsData string
@@ -318,7 +331,7 @@ func runKubectlDeploy(config kubernetesDeployOptions, utils kubernetesDeployUtil
 		log.Entry().WithError(err).Fatalf("Error when reading appTemplate '%v'", config.AppTemplate)
 	}
 
-	//support either image or containerImageName and containerImageTag
+	// support either image or containerImageName and containerImageTag
 	fullImage := ""
 
 	if len(config.Image) > 0 {

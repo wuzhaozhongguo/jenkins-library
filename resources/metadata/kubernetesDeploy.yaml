@@ -223,6 +223,15 @@ spec:
           - PARAMETERS
           - STAGES
           - STEPS
+      - name: helmRepositories
+        aliases:
+          - name: helmRepos
+        type: "map[string]interface{}"
+        description: "Map of named helm repositories which should be added using `helm repo add [name] [url]`"
+        scope:
+          - PARAMETERS
+          - STAGES
+          - STEPS
       - name: image
         aliases:
           - name: deployImage
