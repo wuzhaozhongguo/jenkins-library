@@ -660,8 +660,8 @@ func TestClient_GetBearerToken(t *testing.T) {
 			method       string
 		}
 		want struct {
-			token    string
-			errRegex string
+			authToken AuthToken
+			errRegex  string
 		}
 		response struct {
 			statusCode int
@@ -680,9 +680,14 @@ func TestClient_GetBearerToken(t *testing.T) {
 				clientID:     "myClientID",
 				clientSecret: "secret",
 			},
-			want: want{token: "1234"},
+			want: want{
+				authToken: AuthToken{
+					TokenType:   "bearer",
+					AccessToken: "1234",
+					ExpiresIn:   9876,
+				}},
 			response: response{
-				bodyText: "{\"access_token\": \"1234\"}",
+				bodyText: "{\"access_token\": \"1234\", \"expires_in\": 9876, \"token_type\": \"bearer\"}",
 			},
 		},
 		{
@@ -705,7 +710,11 @@ func TestClient_GetBearerToken(t *testing.T) {
 				clientSecret: "secret",
 				method:       http.MethodPost,
 			},
-			want: want{token: "1234"},
+			want: want{
+				authToken: AuthToken{
+					TokenType:   "bearer",
+					AccessToken: "1234",
+				}},
 			response: response{
 				bodyText: "{\"access_token\": \"1234\"}",
 			},
@@ -720,9 +729,9 @@ func TestClient_GetBearerToken(t *testing.T) {
 		},
 		{
 			name: "No 'access_token' field in json response",
-			want: want{errRegex: "expected token field 'access_token' in json response; response body: '{\"token\": \"1234\"}"},
+			want: want{errRegex: "expected authToken field 'access_token' in json response; response body: '{\"authToken\": \"1234\"}"},
 			response: response{
-				bodyText: "{\"token\": \"1234\"}",
+				bodyText: "{\"authToken\": \"1234\"}",
 			},
 		},
 	}
@@ -750,7 +759,7 @@ func TestClient_GetBearerToken(t *testing.T) {
 			if tt.args.method != "" {
 				assert.Equal(t, tt.args.method, passedMethod, "Wrong method used")
 			}
-			assert.Equal(t, tt.want.token, gotToken, "Did not receive expected token.")
+			assert.Equal(t, tt.want.authToken, gotToken, "Did not receive expected authToken.")
 		})
 	}
 }

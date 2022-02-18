@@ -666,7 +666,7 @@ func ParseHTTPResponseBodyJSON(resp *http.Response, response interface{}) error 
 	return nil
 }
 
-func (c *Client) GetBearerToken(oauthUrl, clientID, clientSecret, method string) (string, error) {
+func (c *Client) GetBearerToken(oauthUrl, clientID, clientSecret, method string) (token AuthToken, err error) {
 	clientOptions := ClientOptions{
 		Username: clientID,
 		Password: clientSecret,
@@ -683,29 +683,36 @@ func (c *Client) GetBearerToken(oauthUrl, clientID, clientSecret, method string)
 	response, httpErr := c.SendRequest(method, oauthUrl, nil, header, nil)
 	bodyText, err := readResponseBody(response)
 	if err != nil {
-		return "", err
+		return
 	}
 	if httpErr != nil {
 		log.SetErrorCategory(log.ErrorService)
-		return "", errors.Wrapf(httpErr, "HTTP %s request to %s failed with code '%d', response body: '%s'; error",
+		err = errors.Wrapf(httpErr, "HTTP %s request to %s failed with code '%d', response body: '%s'; error",
 			method, oauthUrl, response.StatusCode, bodyText)
+		return
 	}
 
 	if response.StatusCode != 200 {
-		return "", errors.Errorf("expected response code 200, got '%d', response body: '%s'", response.StatusCode, bodyText)
+		err = errors.Errorf("expected response code 200, got '%d', response body: '%s'", response.StatusCode, bodyText)
+		return
 	}
 
-	var token AuthToken
 	parsingErr := json.Unmarshal(bodyText, &token)
 	if err != nil {
-		return "", errors.Wrapf(parsingErr, "HTTP response body could not be parsed as JSON: %s", bodyText)
+		err = errors.Wrapf(parsingErr, "HTTP response body could not be parsed as JSON: %s", bodyText)
+		return
 	}
 
 	if token.AccessToken == "" {
-		return "", errors.Errorf("expected token field 'access_token' in json response; response body: '%s'", bodyText)
+		err = errors.Errorf("expected authToken field 'access_token' in json response; response body: '%s'", bodyText)
+		return
 	}
 
-	return token.AccessToken, nil
+	if token.TokenType == "" {
+		token.TokenType = "bearer"
+	}
+
+	return
 }
 
 func readResponseBody(response *http.Response) ([]byte, error) {
