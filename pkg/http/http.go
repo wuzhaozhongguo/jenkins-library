@@ -1,7 +1,6 @@
 package http
 
 import (
-
 	"bytes"
 	"context"
 	"crypto/tls"
@@ -9,7 +8,6 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"github.com/Jeffail/gabs/v2"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -110,6 +108,12 @@ type Uploader interface {
 	UploadRequest(method, url, file, fieldName string, header http.Header, cookies []*http.Cookie, uploadType string) (*http.Response, error)
 	UploadFile(url, file, fieldName string, header http.Header, cookies []*http.Cookie, uploadType string) (*http.Response, error)
 	Upload(data UploadRequestData) (*http.Response, error)
+}
+
+type AuthToken struct {
+	TokenType   string `json:"token_type"`
+	AccessToken string `json:"access_token"`
+	ExpiresIn   int    `json:"expires_in"`
 }
 
 // UploadFile uploads a file's content as multipart-form POST request to the specified URL
@@ -691,18 +695,17 @@ func (c *Client) GetBearerToken(oauthUrl, clientID, clientSecret, method string)
 		return "", errors.Errorf("expected response code 200, got '%d', response body: '%s'", response.StatusCode, bodyText)
 	}
 
-	jsonResponse, parsingErr := gabs.ParseJSON(bodyText)
-	if parsingErr != nil {
+	var token AuthToken
+	parsingErr := json.Unmarshal(bodyText, &token)
+	if err != nil {
 		return "", errors.Wrapf(parsingErr, "HTTP response body could not be parsed as JSON: %s", bodyText)
 	}
 
-	tokenField := jsonResponse.Path("access_token").Data()
-
-	if tokenField == nil {
+	if token.AccessToken == "" {
 		return "", errors.Errorf("expected token field 'access_token' in json response; response body: '%s'", bodyText)
 	}
 
-	return tokenField.(string), nil
+	return token.AccessToken, nil
 }
 
 func readResponseBody(response *http.Response) ([]byte, error) {

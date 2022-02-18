@@ -719,13 +719,6 @@ func TestClient_GetBearerToken(t *testing.T) {
 			},
 		},
 		{
-			name: "Faulty json",
-			want: want{errRegex: "HTTP response body could not be parsed as JSON:"},
-			response: response{
-				bodyText: "{this ain't no json",
-			},
-		},
-		{
 			name: "No 'access_token' field in json response",
 			want: want{errRegex: "expected token field 'access_token' in json response; response body: '{\"token\": \"1234\"}"},
 			response: response{
