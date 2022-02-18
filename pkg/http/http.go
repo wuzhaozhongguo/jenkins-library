@@ -1,6 +1,7 @@
 package http
 
 import (
+
 	"bytes"
 	"context"
 	"crypto/tls"
@@ -8,6 +9,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"github.com/Jeffail/gabs/v2"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -658,4 +660,61 @@ func ParseHTTPResponseBodyJSON(resp *http.Response, response interface{}) error 
 	}
 
 	return nil
+}
+
+func (c *Client) GetBearerToken(oauthUrl, clientID, clientSecret, method string) (string, error) {
+	clientOptions := ClientOptions{
+		Username: clientID,
+		Password: clientSecret,
+	}
+	c.SetOptions(clientOptions)
+
+	if method == "" {
+		method = http.MethodGet
+	}
+
+	header := make(http.Header)
+	header.Add("Accept", "application/json")
+
+	response, httpErr := c.SendRequest(method, oauthUrl, nil, header, nil)
+	bodyText, err := readResponseBody(response)
+	if err != nil {
+		return "", err
+	}
+	if httpErr != nil {
+		log.SetErrorCategory(log.ErrorService)
+		return "", errors.Wrapf(httpErr, "HTTP %s request to %s failed with code '%d', response body: '%s'; error",
+			method, oauthUrl, response.StatusCode, bodyText)
+	}
+
+	if response.StatusCode != 200 {
+		return "", errors.Errorf("expected response code 200, got '%d', response body: '%s'", response.StatusCode, bodyText)
+	}
+
+	jsonResponse, parsingErr := gabs.ParseJSON(bodyText)
+	if parsingErr != nil {
+		return "", errors.Wrapf(parsingErr, "HTTP response body could not be parsed as JSON: %s", bodyText)
+	}
+
+	tokenField := jsonResponse.Path("access_token").Data()
+
+	if tokenField == nil {
+		return "", errors.Errorf("expected token field 'access_token' in json response; response body: '%s'", bodyText)
+	}
+
+	return tokenField.(string), nil
+}
+
+func readResponseBody(response *http.Response) ([]byte, error) {
+	if response == nil {
+		return nil, errors.Errorf("did not retrieve an HTTP response")
+	}
+	if response.Body != nil {
+		defer response.Body.Close()
+	}
+	bodyText, readErr := ioutil.ReadAll(response.Body)
+	if readErr != nil {
+		return nil, errors.Wrap(readErr, "HTTP response body could not be read")
+	}
+	return bodyText, nil
 }

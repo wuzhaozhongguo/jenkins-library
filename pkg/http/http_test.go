@@ -650,3 +650,145 @@ func (m *mockReadCloser) Close() error {
 	args := m.Called()
 	return args.Error(0)
 }
+
+func TestClient_GetBearerToken(t *testing.T) {
+	client := Client{}
+	type (
+		args struct {
+			clientID     string
+			clientSecret string
+			method       string
+		}
+		want struct {
+			token    string
+			errRegex string
+		}
+		response struct {
+			statusCode int
+			bodyText   string
+		}
+	)
+	tests := []struct {
+		name     string
+		args     args
+		want     want
+		response response
+	}{
+		{
+			name: "Straight forward",
+			args: args{
+				clientID:     "myClientID",
+				clientSecret: "secret",
+			},
+			want: want{token: "1234"},
+			response: response{
+				bodyText: "{\"access_token\": \"1234\"}",
+			},
+		},
+		{
+			name: "Faulty credentials",
+			args: args{
+				clientID:     "myClientID",
+				clientSecret: "secret",
+			},
+			want: want{errRegex: "HTTP GET request to .* failed with code '401', response body: '{\"error\": " +
+				"\"unauthorized\"}'; error: request to .* returned with response 401 Unauthorized"},
+			response: response{
+				statusCode: 401,
+				bodyText:   "{\"error\": \"unauthorized\"}",
+			},
+		},
+		{
+			name: "Use other method",
+			args: args{
+				clientID:     "myClientID",
+				clientSecret: "secret",
+				method:       http.MethodPost,
+			},
+			want: want{token: "1234"},
+			response: response{
+				bodyText: "{\"access_token\": \"1234\"}",
+			},
+		},
+		{
+			name: "Wrong response code",
+			want: want{errRegex: "expected response code 200, got '201', response body: '{\"success\\\": \"created\"}'"},
+			response: response{
+				statusCode: 201,
+				bodyText:   "{\"success\": \"created\"}",
+			},
+		},
+		{
+			name: "Faulty json",
+			want: want{errRegex: "HTTP response body could not be parsed as JSON:"},
+			response: response{
+				bodyText: "{this ain't no json",
+			},
+		},
+		{
+			name: "No 'access_token' field in json response",
+			want: want{errRegex: "expected token field 'access_token' in json response; response body: '{\"token\": \"1234\"}"},
+			response: response{
+				bodyText: "{\"token\": \"1234\"}",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var passedMethod string
+			// Start a local HTTP server
+			server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+				passedMethod = req.Method
+				if tt.response.statusCode != 0 {
+					rw.WriteHeader(tt.response.statusCode)
+				}
+				rw.Write([]byte(tt.response.bodyText))
+			}))
+			// Close the server when test finishes
+			defer server.Close()
+
+			gotToken, err := client.GetBearerToken(server.URL, tt.args.clientID, tt.args.clientSecret, tt.args.method)
+			if tt.want.errRegex != "" {
+				require.Error(t, err, "Error expected")
+				assert.Regexp(t, tt.want.errRegex, err.Error(), "")
+				return
+			}
+			require.NoError(t, err, "No error expected")
+			if tt.args.method != "" {
+				assert.Equal(t, tt.args.method, passedMethod, "Wrong method used")
+			}
+			assert.Equal(t, tt.want.token, gotToken, "Did not receive expected token.")
+		})
+	}
+}
+
+func Test_readResponseBody(t *testing.T) {
+	tests := []struct {
+		name        string
+		response    *http.Response
+		want        []byte
+		wantErrText string
+	}{
+		{
+			name:     "Straight forward",
+			response: httpmock.NewStringResponse(200, "test string"),
+			want:     []byte("test string"),
+		},
+		{
+			name:        "No response error",
+			wantErrText: "did not retrieve an HTTP response",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := readResponseBody(tt.response)
+			if tt.wantErrText != "" {
+				require.Error(t, err, "Error expected")
+				assert.EqualError(t, err, tt.wantErrText, "Error is not equal")
+				return
+			}
+			require.NoError(t, err, "No error expected")
+			assert.Equal(t, tt.want, got, "Did not receive expected body")
+		})
+	}
+}
