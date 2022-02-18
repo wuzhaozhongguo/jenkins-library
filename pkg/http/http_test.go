@@ -690,6 +690,22 @@ func TestClient_GetBearerToken(t *testing.T) {
 			},
 		},
 		{
+			name: "No token type",
+			args: args{
+				clientID:     "myClientID",
+				clientSecret: "secret",
+			},
+			want: want{
+				authToken: AuthToken{
+					TokenType:   "bearer",
+					AccessToken: "1234",
+					ExpiresIn:   9876,
+				}},
+			response: response{
+				bodyText: `{"access_token": "1234", "expires_in": 9876}`,
+			},
+		},
+		{
 			name: "Faulty credentials",
 			args: args{
 				clientID:     "myClientID",
