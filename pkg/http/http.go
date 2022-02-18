@@ -96,6 +96,13 @@ type UploadRequestData struct {
 	UploadType  string
 }
 
+// AuthToken provides a structure for the UAA auth token to be marshalled into
+type AuthToken struct {
+	TokenType   string `json:"token_type"`
+	AccessToken string `json:"access_token"`
+	ExpiresIn   int    `json:"expires_in"`
+}
+
 // Sender provides an interface to the piper http client for uid/pwd and token authenticated requests
 type Sender interface {
 	SendRequest(method, url string, body io.Reader, header http.Header, cookies []*http.Cookie) (*http.Response, error)
@@ -108,12 +115,6 @@ type Uploader interface {
 	UploadRequest(method, url, file, fieldName string, header http.Header, cookies []*http.Cookie, uploadType string) (*http.Response, error)
 	UploadFile(url, file, fieldName string, header http.Header, cookies []*http.Cookie, uploadType string) (*http.Response, error)
 	Upload(data UploadRequestData) (*http.Response, error)
-}
-
-type AuthToken struct {
-	TokenType   string `json:"token_type"`
-	AccessToken string `json:"access_token"`
-	ExpiresIn   int    `json:"expires_in"`
 }
 
 // UploadFile uploads a file's content as multipart-form POST request to the specified URL
