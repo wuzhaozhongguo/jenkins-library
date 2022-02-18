@@ -667,21 +667,27 @@ func ParseHTTPResponseBodyJSON(resp *http.Response, response interface{}) error 
 	return nil
 }
 
-func (c *Client) GetBearerToken(oauthUrl, clientID, clientSecret, method string) (token AuthToken, err error) {
+// GetBearerToken authenticates to and retrieves the auth information from the provided oAuth base url adding the path
+// and query: /oauth/token/?grant_type=client_credentials&response_type=token to said base url. The gotten JSON string is
+// marshalled into an AuthToken structure and returned. If no 'access_token' field was present in the JSON response,
+// an error is returned.
+func (c *Client) GetBearerToken(oauthBaseUrl, clientID, clientSecret string) (token AuthToken, err error) {
+	const method = http.MethodGet
+	const urlPathAndQuery = "/oauth/token/?grant_type=client_credentials&response_type=token"
+
+	oauthBaseUrl = strings.TrimSuffix(oauthBaseUrl, "/")
+	entireUrl := fmt.Sprintf("%v%v", oauthBaseUrl, urlPathAndQuery)
+
 	clientOptions := ClientOptions{
 		Username: clientID,
 		Password: clientSecret,
 	}
 	c.SetOptions(clientOptions)
 
-	if method == "" {
-		method = http.MethodGet
-	}
-
 	header := make(http.Header)
 	header.Add("Accept", "application/json")
 
-	response, httpErr := c.SendRequest(method, oauthUrl, nil, header, nil)
+	response, httpErr := c.SendRequest(method, entireUrl, nil, header, nil)
 	bodyText, err := readResponseBody(response)
 	if err != nil {
 		return
@@ -689,7 +695,7 @@ func (c *Client) GetBearerToken(oauthUrl, clientID, clientSecret, method string)
 	if httpErr != nil {
 		log.SetErrorCategory(log.ErrorService)
 		err = errors.Wrapf(httpErr, "HTTP %s request to %s failed with code '%d', response body: '%s'; error",
-			method, oauthUrl, response.StatusCode, bodyText)
+			method, entireUrl, response.StatusCode, bodyText)
 		return
 	}
 

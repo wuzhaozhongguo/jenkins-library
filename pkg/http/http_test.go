@@ -657,7 +657,6 @@ func TestClient_GetBearerToken(t *testing.T) {
 		args struct {
 			clientID     string
 			clientSecret string
-			method       string
 		}
 		want struct {
 			authToken AuthToken
@@ -687,7 +686,7 @@ func TestClient_GetBearerToken(t *testing.T) {
 					ExpiresIn:   9876,
 				}},
 			response: response{
-				bodyText: "{\"access_token\": \"1234\", \"expires_in\": 9876, \"token_type\": \"bearer\"}",
+				bodyText: `{"access_token": "1234", "expires_in": 9876, "token_type": "bearer"}`,
 			},
 		},
 		{
@@ -696,51 +695,34 @@ func TestClient_GetBearerToken(t *testing.T) {
 				clientID:     "myClientID",
 				clientSecret: "secret",
 			},
-			want: want{errRegex: "HTTP GET request to .* failed with code '401', response body: '{\"error\": " +
-				"\"unauthorized\"}'; error: request to .* returned with response 401 Unauthorized"},
+			want: want{errRegex: `HTTP GET request to .*/oauth/token/\?grant_type=client_credentials&response_type=token ` +
+				`failed with code '401', response body: '{"error": "unauthorized"}'; error: request to ` +
+				`.*/oauth/token/\?grant_type=client_credentials&response_type=token returned with response 401 Unauthorized`},
 			response: response{
 				statusCode: 401,
-				bodyText:   "{\"error\": \"unauthorized\"}",
-			},
-		},
-		{
-			name: "Use other method",
-			args: args{
-				clientID:     "myClientID",
-				clientSecret: "secret",
-				method:       http.MethodPost,
-			},
-			want: want{
-				authToken: AuthToken{
-					TokenType:   "bearer",
-					AccessToken: "1234",
-				}},
-			response: response{
-				bodyText: "{\"access_token\": \"1234\"}",
+				bodyText:   `{"error": "unauthorized"}`,
 			},
 		},
 		{
 			name: "Wrong response code",
-			want: want{errRegex: "expected response code 200, got '201', response body: '{\"success\\\": \"created\"}'"},
+			want: want{errRegex: `expected response code 200, got '201', response body: '{"success": "created"}'`},
 			response: response{
 				statusCode: 201,
-				bodyText:   "{\"success\": \"created\"}",
+				bodyText:   `{"success": "created"}`,
 			},
 		},
 		{
 			name: "No 'access_token' field in json response",
-			want: want{errRegex: "expected authToken field 'access_token' in json response; response body: '{\"authToken\": \"1234\"}"},
+			want: want{errRegex: `expected authToken field 'access_token' in json response; response body: '{"authToken": "1234"}`},
 			response: response{
-				bodyText: "{\"authToken\": \"1234\"}",
+				bodyText: `{"authToken": "1234"}`,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var passedMethod string
 			// Start a local HTTP server
 			server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-				passedMethod = req.Method
 				if tt.response.statusCode != 0 {
 					rw.WriteHeader(tt.response.statusCode)
 				}
@@ -749,16 +731,13 @@ func TestClient_GetBearerToken(t *testing.T) {
 			// Close the server when test finishes
 			defer server.Close()
 
-			gotToken, err := client.GetBearerToken(server.URL, tt.args.clientID, tt.args.clientSecret, tt.args.method)
+			gotToken, err := client.GetBearerToken(server.URL, tt.args.clientID, tt.args.clientSecret)
 			if tt.want.errRegex != "" {
 				require.Error(t, err, "Error expected")
 				assert.Regexp(t, tt.want.errRegex, err.Error(), "")
 				return
 			}
 			require.NoError(t, err, "No error expected")
-			if tt.args.method != "" {
-				assert.Equal(t, tt.args.method, passedMethod, "Wrong method used")
-			}
 			assert.Equal(t, tt.want.authToken, gotToken, "Did not receive expected authToken.")
 		})
 	}
