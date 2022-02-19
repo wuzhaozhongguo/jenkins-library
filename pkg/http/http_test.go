@@ -759,6 +759,90 @@ func TestClient_GetBearerToken(t *testing.T) {
 	}
 }
 
+func TestClient_SetBearerToken(t *testing.T) {
+	client := Client{}
+	type (
+		args struct {
+			clientID     string
+			clientSecret string
+		}
+		want struct {
+			token    string
+			errRegex string
+		}
+		response struct {
+			statusCode int
+			bodyText   string
+		}
+	)
+	tests := []struct {
+		name     string
+		args     args
+		want     want
+		response response
+	}{
+		{
+			name: "Straight forward",
+			args: args{
+				clientID:     "myClientID",
+				clientSecret: "secret",
+			},
+			want: want{token: "bearer 1234"},
+			response: response{
+				bodyText: `{"access_token": "1234", "expires_in": 9876, "token_type": "bearer"}`,
+			},
+		},
+		{
+			name: "Error case",
+			args: args{
+				clientID:     "myClientID",
+				clientSecret: "secret",
+			},
+			want: want{errRegex: `HTTP GET request to .*/oauth/token/\?grant_type=client_credentials&response_type=token ` +
+				`failed with code '401', response body: '{"error": "unauthorized"}'; error: request to ` +
+				`.*/oauth/token/\?grant_type=client_credentials&response_type=token returned with response 401 Unauthorized`},
+
+			response: response{
+				statusCode: 401,
+				bodyText:   `{"error": "unauthorized"}`,
+			},
+		},
+		{
+			name: "Different token type",
+			args: args{
+				clientID:     "myClientID",
+				clientSecret: "secret",
+			},
+			want: want{token: "jwt 1234"},
+			response: response{
+				bodyText: `{"access_token": "1234", "expires_in": 9876, "token_type": "jwt"}`,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Start a local HTTP server
+			server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+				if tt.response.statusCode != 0 {
+					rw.WriteHeader(tt.response.statusCode)
+				}
+				rw.Write([]byte(tt.response.bodyText))
+			}))
+			// Close the server when test finishes
+			defer server.Close()
+
+			err := client.SetBearerToken(server.URL, tt.args.clientID, tt.args.clientSecret)
+			if tt.want.errRegex != "" {
+				require.Error(t, err, "Error expected")
+				assert.Regexp(t, tt.want.errRegex, err.Error(), "")
+				return
+			}
+			require.NoError(t, err, "No error expected")
+			assert.Equal(t, tt.want.token, client.token)
+		})
+	}
+}
+
 func Test_readResponseBody(t *testing.T) {
 	tests := []struct {
 		name        string

@@ -667,6 +667,17 @@ func ParseHTTPResponseBodyJSON(resp *http.Response, response interface{}) error 
 	return nil
 }
 
+func (c *Client) SetBearerToken(oauthBaseUrl, clientID, clientSecret string) error {
+	authToken, err := c.GetBearerToken(oauthBaseUrl, clientID, clientSecret)
+	if err != nil {
+		return err
+	}
+
+	c.SetOptions(ClientOptions{Token: fmt.Sprintf("%s %s", authToken.TokenType, authToken.AccessToken)})
+	return nil
+}
+
+
 // GetBearerToken authenticates to and retrieves the auth information from the provided oAuth base url adding the path
 // and query: /oauth/token/?grant_type=client_credentials&response_type=token to said base url. The gotten JSON string is
 // marshalled into an AuthToken structure and returned. If no 'access_token' field was present in the JSON response,
