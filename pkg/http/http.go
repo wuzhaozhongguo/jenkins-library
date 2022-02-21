@@ -118,6 +118,11 @@ type Uploader interface {
 	Upload(data UploadRequestData) (*http.Response, error)
 }
 
+type API interface {
+	Sender
+	SetBearerToken(oauthBaseUrl, clientID, clientSecret string) error
+}
+
 // UploadFile uploads a file's content as multipart-form POST request to the specified URL
 func (c *Client) UploadFile(url, file, fileFieldName string, header http.Header, cookies []*http.Cookie, uploadType string) (*http.Response, error) {
 	return c.UploadRequest(http.MethodPost, url, file, fileFieldName, header, cookies, uploadType)

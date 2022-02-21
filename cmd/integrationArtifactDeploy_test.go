@@ -182,6 +182,10 @@ func (c *httpMockCpis) SetOptions(options piperhttp.ClientOptions) {
 	c.Options = options
 }
 
+func (c *httpMockCpis) SetBearerToken(oauthBaseUrl, clientID, clientSecret string) error {
+	return nil
+}
+
 func (c *httpMockCpis) SendRequest(method string, url string, r io.Reader, header http.Header, cookies []*http.Cookie) (*http.Response, error) {
 
 	c.Method = method
