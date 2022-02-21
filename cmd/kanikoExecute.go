@@ -205,6 +205,11 @@ func runKanikoExecute(config *kanikoExecuteOptions, telemetryData *telemetry.Cus
 		commonPipelineEnvironment.container.imageNames = append(commonPipelineEnvironment.container.imageNames, containerImageName)
 	}
 
+	//for multi-stage docker builds we need to add ignore /busybox path since kaniko --cleanup will remove /busybox path and mkdir is inside /busybox
+	//https://github.com/GoogleContainerTools/kaniko/issues/1586#issuecomment-945718536
+	kanikoIgnoreBusyBoxForMultiStageOpts := []string{"--ignore-paths", "/busybox"}
+	config.BuildOptions = append(config.BuildOptions, kanikoIgnoreBusyBoxForMultiStageOpts...)
+
 	// no support for building multiple containers
 	return runKaniko(config.DockerfilePath, config.BuildOptions, execRunner, fileUtils)
 }
