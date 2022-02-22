@@ -13,6 +13,7 @@ import (
 	"mime/multipart"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -677,17 +678,19 @@ func (c *Client) SetBearerToken(oauthBaseUrl, clientID, clientSecret string) err
 	return nil
 }
 
-
 // GetBearerToken authenticates to and retrieves the auth information from the provided oAuth base url adding the path
 // and query: /oauth/token/?grant_type=client_credentials&response_type=token to said base url. The gotten JSON string is
 // marshalled into an AuthToken structure and returned. If no 'access_token' field was present in the JSON response,
 // an error is returned.
-func (c *Client) GetBearerToken(oauthBaseUrl, clientID, clientSecret string) (token AuthToken, err error) {
+func (c *Client) GetBearerToken(oauthUrl, clientID, clientSecret string) (token AuthToken, err error) {
 	const method = http.MethodGet
-	const urlPathAndQuery = "/oauth/token/?grant_type=client_credentials&response_type=token"
+	const urlPathAndQuery = "oauth/token/?grant_type=client_credentials&response_type=token"
 
-	oauthBaseUrl = strings.TrimSuffix(oauthBaseUrl, "/")
-	entireUrl := fmt.Sprintf("%v%v", oauthBaseUrl, urlPathAndQuery)
+	oauthBaseUrl, err := url.Parse(oauthUrl)
+	if err != nil {
+		return
+	}
+	entireUrl := fmt.Sprintf("%s://%s/%s", oauthBaseUrl.Scheme, oauthBaseUrl.Host, urlPathAndQuery)
 
 	clientOptions := ClientOptions{
 		Username: clientID,

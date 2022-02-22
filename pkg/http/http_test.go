@@ -655,6 +655,7 @@ func TestClient_GetBearerToken(t *testing.T) {
 	client := Client{}
 	type (
 		args struct {
+			oauthUrlPath string
 			clientID     string
 			clientSecret string
 		}
@@ -676,6 +677,23 @@ func TestClient_GetBearerToken(t *testing.T) {
 		{
 			name: "Straight forward",
 			args: args{
+				clientID:     "myClientID",
+				clientSecret: "secret",
+			},
+			want: want{
+				authToken: AuthToken{
+					TokenType:   "bearer",
+					AccessToken: "1234",
+					ExpiresIn:   9876,
+				}},
+			response: response{
+				bodyText: `{"access_token": "1234", "expires_in": 9876, "token_type": "bearer"}`,
+			},
+		},
+		{
+			name: "OAuth Url with path",
+			args: args{
+				oauthUrlPath: "/oauth/token?grant_type=client_credentials",
 				clientID:     "myClientID",
 				clientSecret: "secret",
 			},
@@ -737,8 +755,10 @@ func TestClient_GetBearerToken(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var requestedUrlPath string
 			// Start a local HTTP server
 			server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+				requestedUrlPath = req.URL.String()
 				if tt.response.statusCode != 0 {
 					rw.WriteHeader(tt.response.statusCode)
 				}
@@ -747,7 +767,8 @@ func TestClient_GetBearerToken(t *testing.T) {
 			// Close the server when test finishes
 			defer server.Close()
 
-			gotToken, err := client.GetBearerToken(server.URL, tt.args.clientID, tt.args.clientSecret)
+			oauthUrl := server.URL + tt.args.oauthUrlPath
+			gotToken, err := client.GetBearerToken(oauthUrl, tt.args.clientID, tt.args.clientSecret)
 			if tt.want.errRegex != "" {
 				require.Error(t, err, "Error expected")
 				assert.Regexp(t, tt.want.errRegex, err.Error(), "")
@@ -755,6 +776,8 @@ func TestClient_GetBearerToken(t *testing.T) {
 			}
 			require.NoError(t, err, "No error expected")
 			assert.Equal(t, tt.want.authToken, gotToken, "Did not receive expected authToken.")
+			wantUrlPath := "/oauth/token/?grant_type=client_credentials&response_type=token"
+			assert.Equal(t, wantUrlPath, requestedUrlPath)
 		})
 	}
 }
