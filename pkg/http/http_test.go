@@ -729,9 +729,9 @@ func TestClient_GetBearerToken(t *testing.T) {
 				clientID:     "myClientID",
 				clientSecret: "secret",
 			},
-			want: want{errRegex: `HTTP GET request to .*/oauth/token/\?grant_type=client_credentials&response_type=token ` +
+			want: want{errRegex: `HTTP GET request to .*/oauth/token\?grant_type=client_credentials&response_type=token ` +
 				`failed with code '401', response body: '{"error": "unauthorized"}'; error: request to ` +
-				`.*/oauth/token/\?grant_type=client_credentials&response_type=token returned with response 401 Unauthorized`},
+				`.*/oauth/token\?grant_type=client_credentials&response_type=token returned with response 401 Unauthorized`},
 			response: response{
 				statusCode: 401,
 				bodyText:   `{"error": "unauthorized"}`,
@@ -776,7 +776,7 @@ func TestClient_GetBearerToken(t *testing.T) {
 			}
 			require.NoError(t, err, "No error expected")
 			assert.Equal(t, tt.want.authToken, gotToken, "Did not receive expected authToken.")
-			wantUrlPath := "/oauth/token/?grant_type=client_credentials&response_type=token"
+			wantUrlPath := "/oauth/token?grant_type=client_credentials&response_type=token"
 			assert.Equal(t, wantUrlPath, requestedUrlPath)
 		})
 	}
