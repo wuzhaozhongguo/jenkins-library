@@ -80,6 +80,7 @@ import (
 	"github.com/SAP/jenkins-library/pkg/telemetry"
 	"github.com/SAP/jenkins-library/pkg/splunk"
 	"github.com/SAP/jenkins-library/pkg/validation"
+	"github.com/SAP/jenkins-library/pkg/ans"
 	"github.com/spf13/cobra"
 )
 
@@ -184,6 +185,9 @@ func {{.CobraCmdFuncName}}() *cobra.Command {
 				if len({{if .ExportPrefix}}{{ .ExportPrefix }}.{{end}}GeneralConfig.HookConfig.SplunkConfig.Dsn) > 0 {
 					splunkClient.Send(telemetryClient.GetData(), logCollector)
 				}
+				if len({{if .ExportPrefix}}{{ .ExportPrefix }}.{{end}}GeneralConfig.ANSServiceKey) > 0 {
+					ans.Send(GeneralConfig.ANSServiceKey)
+				}
 			}
 			log.DeferExitHandler(handler)
 			defer handler()
@@ -209,14 +213,8 @@ func {{.FlagsFunc}}(cmd *cobra.Command, stepConfig *{{.StepName}}Options) {
 	{{- range $key, $value := uniqueName .StepParameters }}
 	{{ if isCLIParam $value.Type }}cmd.Flags().{{ $value.Type | flagType }}(&stepConfig.{{ $value.Name | golangName }}, {{ $value.Name | quote }}, {{ $value.Default }}, {{ $value.Description | quote }}){{end}}{{ end }}
 	{{- printf "\n" }}
-	{{- range $key, $value := .StepParameters }}
-	{{- if $value.Mandatory }}
-	cmd.MarkFlagRequired({{ $value.Name | quote }})
-	{{- end }}
-	{{- if $value.DeprecationMessage }}
-	cmd.Flags().MarkDeprecated({{ $value.Name | quote }}, {{ $value.DeprecationMessage | quote }})
-	{{- end }}
-	{{- end }}
+	{{- range $key, $value := .StepParameters }}{{ if $value.Mandatory }}
+	cmd.MarkFlagRequired({{ $value.Name | quote }}){{ end }}{{ end }}
 }
 
 {{ define "resourceRefs"}}
@@ -278,9 +276,6 @@ func {{ .StepName }}Metadata() config.StepData {
 						Aliases:   []config.Alias{{ "{" }}{{ range $notused, $alias := $value.Aliases }}{{ "{" }}Name: {{ $alias.Name | quote }}{{ if $alias.Deprecated }}, Deprecated: {{$alias.Deprecated}}{{ end }}{{ "}" }},{{ end }}{{ "}" }},
 						{{ if $value.Default -}} Default:   {{ $value.Default }}, {{- end}}{{ if $value.Conditions }}
 						Conditions: []config.Condition{ {{- range $i, $cond := $value.Conditions }} {ConditionRef: {{ $cond.ConditionRef | quote }}, Params: []config.Param{ {{- range $j, $p := $cond.Params}} { Name: {{ $p.Name | quote }}, Value: {{ $p.Value | quote }} }, {{end -}} } }, {{ end -}} },{{- end }}
-						{{- if $value.DeprecationMessage }}
-						DeprecationMessage: {{ $value.DeprecationMessage | quote }},
-						{{- end}}
 					},{{ end }}
 				},
 			},
