@@ -13,7 +13,6 @@ import (
 	"mime/multipart"
 	"net"
 	"net/http"
-	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -97,13 +96,6 @@ type UploadRequestData struct {
 	UploadType  string
 }
 
-// AuthToken provides a structure for the UAA auth token to be marshalled into
-type AuthToken struct {
-	TokenType   string `json:"token_type"`
-	AccessToken string `json:"access_token"`
-	ExpiresIn   int    `json:"expires_in"`
-}
-
 // Sender provides an interface to the piper http client for uid/pwd and token authenticated requests
 type Sender interface {
 	SendRequest(method, url string, body io.Reader, header http.Header, cookies []*http.Cookie) (*http.Response, error)
@@ -116,11 +108,6 @@ type Uploader interface {
 	UploadRequest(method, url, file, fieldName string, header http.Header, cookies []*http.Cookie, uploadType string) (*http.Response, error)
 	UploadFile(url, file, fieldName string, header http.Header, cookies []*http.Cookie, uploadType string) (*http.Response, error)
 	Upload(data UploadRequestData) (*http.Response, error)
-}
-
-type API interface {
-	Sender
-	SetBearerToken(oauthBaseUrl, clientID, clientSecret string) error
 }
 
 // UploadFile uploads a file's content as multipart-form POST request to the specified URL
@@ -671,86 +658,4 @@ func ParseHTTPResponseBodyJSON(resp *http.Response, response interface{}) error 
 	}
 
 	return nil
-}
-
-func (c *Client) SetBearerToken(oauthBaseUrl, clientID, clientSecret string) error {
-	authToken, err := c.GetBearerToken(oauthBaseUrl, clientID, clientSecret)
-	if err != nil {
-		return err
-	}
-
-	c.SetOptions(ClientOptions{Token: fmt.Sprintf("%s %s", authToken.TokenType, authToken.AccessToken)})
-	return nil
-}
-
-// GetBearerToken authenticates to and retrieves the auth information from the provided oAuth base url adding the path
-// and query: /oauth/token/?grant_type=client_credentials&response_type=token to said base url. The gotten JSON string is
-// marshalled into an AuthToken structure and returned. If no 'access_token' field was present in the JSON response,
-// an error is returned.
-func (c *Client) GetBearerToken(oauthUrl, clientID, clientSecret string) (token AuthToken, err error) {
-	const method = http.MethodGet
-	const urlPathAndQuery = "oauth/token?grant_type=client_credentials&response_type=token"
-
-	oauthBaseUrl, err := url.Parse(oauthUrl)
-	if err != nil {
-		return
-	}
-	entireUrl := fmt.Sprintf("%s://%s/%s", oauthBaseUrl.Scheme, oauthBaseUrl.Host, urlPathAndQuery)
-
-	clientOptions := ClientOptions{
-		Username: clientID,
-		Password: clientSecret,
-	}
-	c.SetOptions(clientOptions)
-
-	header := make(http.Header)
-	header.Add("Accept", "application/json")
-
-	response, httpErr := c.SendRequest(method, entireUrl, nil, header, nil)
-	bodyText, err := readResponseBody(response)
-	if err != nil {
-		return
-	}
-	if httpErr != nil {
-		log.SetErrorCategory(log.ErrorService)
-		err = errors.Wrapf(httpErr, "HTTP %s request to %s failed with code '%d', response body: '%s'; error",
-			method, entireUrl, response.StatusCode, bodyText)
-		return
-	}
-
-	if response.StatusCode != 200 {
-		err = errors.Errorf("expected response code 200, got '%d', response body: '%s'", response.StatusCode, bodyText)
-		return
-	}
-
-	parsingErr := json.Unmarshal(bodyText, &token)
-	if err != nil {
-		err = errors.Wrapf(parsingErr, "HTTP response body could not be parsed as JSON: %s", bodyText)
-		return
-	}
-
-	if token.AccessToken == "" {
-		err = errors.Errorf("expected authToken field 'access_token' in json response; response body: '%s'", bodyText)
-		return
-	}
-
-	if token.TokenType == "" {
-		token.TokenType = "bearer"
-	}
-
-	return
-}
-
-func readResponseBody(response *http.Response) ([]byte, error) {
-	if response == nil {
-		return nil, errors.Errorf("did not retrieve an HTTP response")
-	}
-	if response.Body != nil {
-		defer response.Body.Close()
-	}
-	bodyText, readErr := ioutil.ReadAll(response.Body)
-	if readErr != nil {
-		return nil, errors.Wrap(readErr, "HTTP response body could not be read")
-	}
-	return bodyText, nil
 }
