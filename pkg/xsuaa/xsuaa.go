@@ -12,12 +12,12 @@ import (
 )
 
 type XSUAA struct {
-	client    piperhttp.Client
+	Client    piperhttp.Client
 	AuthToken AuthToken
 }
 
-// Sender provides an interface to the piper http client for uid/pwd and token authenticated requests
-// It includes a SetBearerToken function that will retrieve a token from the XSUAA service and store it in the client
+// Sender provides an interface to the piper http Client for uid/pwd and token authenticated requests
+// It includes a SetBearerToken function that will retrieve a token from the XSUAA service and store it in the Client
 type Sender interface {
 	piperhttp.Sender
 	SetBearerToken(oauthBaseUrl, clientID, clientSecret string) error
@@ -36,7 +36,7 @@ func (x *XSUAA) SetBearerToken(oauthBaseUrl, clientID, clientSecret string) erro
 		return err
 	}
 
-	x.client.SetOptions(piperhttp.ClientOptions{Token: fmt.Sprintf("%s %s", x.AuthToken.TokenType, x.AuthToken.AccessToken)})
+	x.Client.SetOptions(piperhttp.ClientOptions{Token: fmt.Sprintf("%s %s", x.AuthToken.TokenType, x.AuthToken.AccessToken)})
 	return nil
 }
 
@@ -57,12 +57,12 @@ func (x *XSUAA) GetBearerToken(oauthUrl, clientID, clientSecret string) (err err
 		Username: clientID,
 		Password: clientSecret,
 	}
-	x.client.SetOptions(clientOptions)
+	x.Client.SetOptions(clientOptions)
 
 	header := make(http.Header)
 	header.Add("Accept", "application/json")
 
-	response, httpErr := x.client.SendRequest(method, entireUrl, nil, header, nil)
+	response, httpErr := x.Client.SendRequest(method, entireUrl, nil, header, nil)
 	if httpErr != nil {
 		log.SetErrorCategory(log.ErrorService)
 		err = errors.Wrapf(httpErr, "HTTP %s request failed", method)

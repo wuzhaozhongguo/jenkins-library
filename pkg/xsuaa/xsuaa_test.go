@@ -111,7 +111,7 @@ func TestXSUAA_GetBearerToken(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			xsuaa := XSUAA{client: piperhttp.Client{}}
+			xsuaa := XSUAA{Client: piperhttp.Client{}}
 			var requestedUrlPath string
 			// Start a local HTTP server
 			server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
@@ -197,7 +197,7 @@ func TestClient_SetBearerToken(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			xsuaa := XSUAA{client: piperhttp.Client{}}
+			xsuaa := XSUAA{Client: piperhttp.Client{}}
 			var headers http.Header
 			// Start a local HTTP server
 			server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
@@ -217,7 +217,7 @@ func TestClient_SetBearerToken(t *testing.T) {
 				return
 			}
 			require.NoError(t, err, "No error expected")
-			_, err = xsuaa.client.SendRequest(http.MethodGet, server.URL, nil, nil, nil)
+			_, err = xsuaa.Client.SendRequest(http.MethodGet, server.URL, nil, nil, nil)
 			require.NoError(t, err, "Client should work without error")
 			assert.Equal(t, tt.want.token, headers.Get("Authorization"))
 		})
