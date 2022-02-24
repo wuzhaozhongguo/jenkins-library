@@ -31,7 +31,8 @@ func apiKeyValueMapDownload(config apiKeyValueMapDownloadOptions, telemetryData 
 	}
 }
 
-func runApiKeyValueMapDownload(config *apiKeyValueMapDownloadOptions, telemetryData *telemetry.CustomData, httpClient piperhttp.API) error {
+func runApiKeyValueMapDownload(config *apiKeyValueMapDownloadOptions, telemetryData *telemetry.CustomData, httpClient piperhttp.Sender) error {
+	clientOptions := piperhttp.ClientOptions{}
 	header := make(http.Header)
 	header.Add("Accept", "application/json")
 	serviceKey, err := cpi.ReadCpiServiceKey(config.APIServiceKey)
@@ -39,10 +40,14 @@ func runApiKeyValueMapDownload(config *apiKeyValueMapDownloadOptions, telemetryD
 		return err
 	}
 	downloadkeyValueMapArtifactURL := fmt.Sprintf("%s/apiportal/api/1.0/Management.svc/KeyMapEntries('%s')", serviceKey.OAuth.Host, config.KeyValueMapName)
-	err = httpClient.SetBearerToken(serviceKey.OAuth.OAuthTokenProviderURL, serviceKey.OAuth.ClientID, serviceKey.OAuth.ClientSecret)
+	tokenParameters := cpi.TokenParameters{TokenURL: serviceKey.OAuth.OAuthTokenProviderURL,
+		Username: serviceKey.OAuth.ClientID, Password: serviceKey.OAuth.ClientSecret, Client: httpClient}
+	token, err := cpi.CommonUtils.GetBearerToken(tokenParameters)
 	if err != nil {
 		return errors.Wrap(err, "failed to fetch Bearer Token")
 	}
+	clientOptions.Token = fmt.Sprintf("Bearer %s", token)
+	httpClient.SetOptions(clientOptions)
 	httpMethod := http.MethodGet
 	downloadResp, httpErr := httpClient.SendRequest(httpMethod, downloadkeyValueMapArtifactURL, nil, header, nil)
 	if httpErr != nil {

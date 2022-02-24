@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/SAP/jenkins-library/pkg/ans"
 	"github.com/SAP/jenkins-library/pkg/config"
 	"github.com/SAP/jenkins-library/pkg/gcs"
 	"github.com/SAP/jenkins-library/pkg/log"
@@ -273,6 +274,9 @@ Besides triggering a scan the step verifies the results after they have been upl
 				if len(GeneralConfig.HookConfig.SplunkConfig.Dsn) > 0 {
 					splunkClient.Send(telemetryClient.GetData(), logCollector)
 				}
+				if len(GeneralConfig.ANSServiceKey) > 0 {
+					ans.Send(GeneralConfig.ANSServiceKey)
+				}
 			}
 			log.DeferExitHandler(handler)
 			defer handler()
@@ -354,7 +358,6 @@ func addFortifyExecuteScanFlags(cmd *cobra.Command, stepConfig *fortifyExecuteSc
 	cmd.Flags().BoolVar(&stepConfig.CreateResultIssue, "createResultIssue", false, "Whether the step creates a GitHub issue containing the scan results in the originating repo. Since optimized pipelines are headless the creation is implicitly activated for schedules runs.")
 
 	cmd.MarkFlagRequired("authToken")
-	cmd.Flags().MarkDeprecated("pythonAdditionalPath", "this is deprecated")
 	cmd.MarkFlagRequired("serverUrl")
 }
 
@@ -727,14 +730,13 @@ func fortifyExecuteScanMetadata() config.StepData {
 						Default:     `PDF`,
 					},
 					{
-						Name:               "pythonAdditionalPath",
-						ResourceRef:        []config.ResourceReference{},
-						Scope:              []string{"PARAMETERS", "STAGES", "STEPS"},
-						Type:               "[]string",
-						Mandatory:          false,
-						Aliases:            []config.Alias{},
-						Default:            []string{`./lib`, `.`},
-						DeprecationMessage: "this is deprecated",
+						Name:        "pythonAdditionalPath",
+						ResourceRef: []config.ResourceReference{},
+						Scope:       []string{"PARAMETERS", "STAGES", "STEPS"},
+						Type:        "[]string",
+						Mandatory:   false,
+						Aliases:     []config.Alias{},
+						Default:     []string{`./lib`, `.`},
 					},
 					{
 						Name:        "artifactUrl",

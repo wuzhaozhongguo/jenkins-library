@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/SAP/jenkins-library/pkg/ans"
 	"github.com/SAP/jenkins-library/pkg/config"
 	"github.com/SAP/jenkins-library/pkg/gcs"
 	"github.com/SAP/jenkins-library/pkg/log"
@@ -191,6 +192,9 @@ If the build is successful the resulting artifact can be uploaded to e.g. a bina
 				telemetryClient.Send()
 				if len(GeneralConfig.HookConfig.SplunkConfig.Dsn) > 0 {
 					splunkClient.Send(telemetryClient.GetData(), logCollector)
+				}
+				if len(GeneralConfig.ANSServiceKey) > 0 {
+					ans.Send(GeneralConfig.ANSServiceKey)
 				}
 			}
 			log.DeferExitHandler(handler)
