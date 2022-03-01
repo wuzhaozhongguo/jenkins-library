@@ -168,6 +168,7 @@ void dockerWrapper(script, stepName, config, body) {
 // reused in sonarExecuteScan
 void credentialWrapper(config, List credentialInfo, body) {
     credentialInfo = handleVaultCredentials(config, credentialInfo)
+    credentialInfo = handleANSCredentials(config, credentialInfo)
 
     if (credentialInfo.size() > 0) {
         def creds = []
@@ -251,6 +252,15 @@ List handleVaultCredentials(config, List credentialInfo) {
 
     if (config.containsKey('vaultTokenCredentialsId')) {
         credentialInfo += [[type: 'token', id: 'vaultTokenCredentialsId', env: ['PIPER_vaultToken']]]
+    }
+
+    return credentialInfo
+}
+
+// Injects ansCredentials if configured
+List handleANSCredentials(config, List credentialInfo) {
+    if (config.containsKey('ansServiceKeyCredentialsId')) {
+        credentialInfo += [[type: 'string', id: 'ansServiceKeyCredentialsId', env: ['PIPER_ansServiceKey']]]
     }
 
     return credentialInfo
