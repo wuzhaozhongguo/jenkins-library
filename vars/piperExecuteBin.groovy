@@ -168,6 +168,8 @@ void dockerWrapper(script, stepName, config, body) {
 // reused in sonarExecuteScan
 void credentialWrapper(config, List credentialInfo, body) {
     credentialInfo = handleVaultCredentials(config, credentialInfo)
+    echo "000000000000000 $config"
+    echo "5555555555555555 ${config.ansServiceKeyCredentialsId}"
     credentialInfo = handleANSCredentials(config, credentialInfo)
 
     if (credentialInfo.size() > 0) {
@@ -214,6 +216,8 @@ void credentialWrapper(config, List credentialInfo, body) {
             }
         } else {
             withCredentials(creds) {
+                echo "1111111111111111"
+                sh "echo \$PIPER_ansServiceKey"
                 body()
             }
         }
