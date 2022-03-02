@@ -73,7 +73,7 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
                     try {
                         try {
                             try {
-                                credentialWrapper(config, credentialInfo) {
+                                credentialWrapper(config, credentialInfo, script) {
                                     sh "${piperGoPath} ${stepName}${defaultConfigArgs}${customConfigArg}"
                                 }
                             } finally {
@@ -168,11 +168,11 @@ void dockerWrapper(script, stepName, config, body) {
 }
 
 // reused in sonarExecuteScan
-void credentialWrapper(config, List credentialInfo, body) {
+void credentialWrapper(config, List credentialInfo, body, script) {
     credentialInfo = handleVaultCredentials(config, credentialInfo)
     echo "000000000000000 $config"
     echo "5555555555555555 ${config.ansServiceKeyCredentialsId}"
-    credentialInfo = handleANSCredentials(config, credentialInfo)
+    credentialInfo = handleANSCredentials(script.commonPipelineEnvironment.configuration.general, credentialInfo)
 
     if (credentialInfo.size() > 0) {
         def creds = []
