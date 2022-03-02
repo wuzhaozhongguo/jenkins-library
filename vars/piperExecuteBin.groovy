@@ -213,7 +213,10 @@ void credentialWrapper(config, List credentialInfo, body, script) {
         if (sshCreds.size() > 0) {
             sshagent (sshCreds) {
                 withCredentials(creds) {
+                    echo "222222222222211212"
+                    sh "echo \$PIPER_ansServiceKey"
                     body()
+                    sh "echo \$PIPER_ansServiceKey"
                 }
             }
         } else {
@@ -221,10 +224,14 @@ void credentialWrapper(config, List credentialInfo, body, script) {
                 echo "1111111111111111"
                 sh "echo \$PIPER_ansServiceKey"
                 body()
+                sh "echo \$PIPER_ansServiceKey"
             }
         }
     } else {
+        echo "13131313131313"
+        sh "echo \$PIPER_ansServiceKey"
         body()
+        sh "echo \$PIPER_ansServiceKey"
     }
 }
 
