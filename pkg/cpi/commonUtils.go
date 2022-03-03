@@ -69,7 +69,7 @@ func ReadCpiServiceKey(serviceKeyJSON string) (cpiServiceKey ServiceKey, err err
 	// parse
 	err = json.Unmarshal([]byte(serviceKeyJSON), &cpiServiceKey)
 	if err != nil {
-		err = errors.Wrap(err, "error unmarshalling serviceKey")
+		err = errors.Wrap(err, "THIS IS A TEST error unmarshalling serviceKey")
 		return
 	}
 
