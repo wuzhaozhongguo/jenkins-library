@@ -171,7 +171,7 @@ void dockerWrapper(script, stepName, config, body) {
 void credentialWrapper(config, List credentialInfo, body, script) {
     credentialInfo = handleVaultCredentials(config, credentialInfo)
     credentialInfo = handleANSCredentials(script.commonPipelineEnvironment.configuration.general, credentialInfo)
-    echo "000000000000000 $script.commonPipelineEnvironment.configuration.general"
+    echo "000000000000000 ${script.commonPipelineEnvironment.getValue('ansServiceKeyCredentialsId')}"
     echo "5555555555555555 ${script.commonPipelineEnvironment.configuration.general.ansServiceKeyCredentialsId}"
 
     if (credentialInfo.size() > 0) {
