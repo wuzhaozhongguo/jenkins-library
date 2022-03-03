@@ -272,7 +272,7 @@ List handleVaultCredentials(config, List credentialInfo) {
 
 // Injects ansCredentials if configured
 List handleANSCredentials(config, List credentialInfo) {
-    echo "0000000000000001111111111111111 config: $config"
+    //echo "0000000000000001111111111111111 config: $config"
     echo "000000000000000 ${script.commonPipelineEnvironment.getValue('ansServiceKeyCredentialsId')}"
     //echo "55555555555555551111111111111111 config.ansServiceKeyCredentialsId:  ${config.ansServiceKeyCredentialsId}"
     if (config.containsKey('ansServiceKeyCredentialsId')) {
