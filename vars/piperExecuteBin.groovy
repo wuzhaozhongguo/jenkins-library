@@ -171,8 +171,8 @@ void dockerWrapper(script, stepName, config, body) {
 void credentialWrapper(config, List credentialInfo, body, script) {
     credentialInfo = handleVaultCredentials(config, credentialInfo)
     credentialInfo = handleANSCredentials(script.commonPipelineEnvironment.configuration.general, credentialInfo)
-    echo "000000000000000 ${script.commonPipelineEnvironment.getValue('ansServiceKeyCredentialsId')}"
-    echo "5555555555555555 ${script.commonPipelineEnvironment.configuration.general.ansServiceKeyCredentialsId}"
+    //echo "000000000000000 ${script.commonPipelineEnvironment.getValue('ansServiceKeyCredentialsId')}"
+    //echo "5555555555555555 ${script.commonPipelineEnvironment.configuration.general.ansServiceKeyCredentialsId}"
 
     if (credentialInfo.size() > 0) {
         def creds = []
@@ -273,7 +273,8 @@ List handleVaultCredentials(config, List credentialInfo) {
 // Injects ansCredentials if configured
 List handleANSCredentials(config, List credentialInfo) {
     echo "0000000000000001111111111111111 config: $config"
-    echo "55555555555555551111111111111111 config.ansServiceKeyCredentialsId:  ${config.ansServiceKeyCredentialsId}"
+    echo "000000000000000 ${script.commonPipelineEnvironment.getValue('ansServiceKeyCredentialsId')}"
+    //echo "55555555555555551111111111111111 config.ansServiceKeyCredentialsId:  ${config.ansServiceKeyCredentialsId}"
     if (config.containsKey('ansServiceKeyCredentialsId')) {
         echo "CONTAINS KEY 21212121"
         credentialInfo += [[type: 'string', id: 'ansServiceKeyCredentialsId', env: ['PIPER_ansServiceKey']]]
