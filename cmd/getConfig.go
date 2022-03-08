@@ -141,6 +141,7 @@ func getConfig() (config.StepConfig, error) {
 	var stepConfig config.StepConfig
 	var err error
 
+	log.SetVerbose(true)
 	if configOptions.stageConfig {
 		stepConfig, err = getStageConfig()
 		if err != nil {
