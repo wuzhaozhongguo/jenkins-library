@@ -94,6 +94,16 @@ func getVaultClientFromConfig(config StepConfig, creds VaultCredentials) (vaultC
 	address, addressOk := config.Config["vaultServerUrl"].(string)
 	// if vault isn't used it's not an error
 
+	if creds.AppRoleID == "" {
+		creds.AppRoleID = os.Getenv("PIPER_vaultAppRoleID")
+	}
+	if creds.AppRoleSecretID == "" {
+		creds.AppRoleSecretID = os.Getenv("PIPER_vaultAppRoleSecretID")
+	}
+	if creds.VaultToken == "" {
+		creds.VaultToken = os.Getenv("PIPER_vaultToken")
+	}
+
 	if !addressOk || creds.VaultToken == "" && (creds.AppRoleID == "" || creds.AppRoleSecretID == "") {
 		log.Entry().Debug("Skipping fetching secrets from Vault since it is not configured")
 		return nil, nil
