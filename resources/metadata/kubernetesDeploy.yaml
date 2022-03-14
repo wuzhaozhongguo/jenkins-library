@@ -74,7 +74,7 @@ spec:
         longDescription: |
           There are two supported ways for the template rendering:
 
-          1. For a deployments using single image, you can use a placeholder `<image-name>`, which will be replaced with the image GUN.
+          1. *[DEPRECATED]* For a deployments using single image, you can use a placeholder `<image-name>`, which will be replaced with the image GUN.
           ```
           apiVersion: apps/v1
           kind: Deployment
@@ -163,6 +163,7 @@ spec:
         aliases:
           - name: artifactVersion
         type: string
+        deprecationMessage: Please use [imageN]
         description: Tag of the container which will be built - will be used together with `containerImageName` instead of parameter `containerImage`
         scope:
           - GENERAL
