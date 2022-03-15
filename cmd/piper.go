@@ -84,6 +84,8 @@ var GeneralConfig GeneralConfigOptions
 func Execute() {
 
 	log.Entry().Infof("ADO Piper branch test!")
+	fmt.Println(os.Environ())
+
 	rootCmd.AddCommand(ArtifactPrepareVersionCommand())
 	rootCmd.AddCommand(ConfigCommand())
 	rootCmd.AddCommand(DefaultsCommand())
