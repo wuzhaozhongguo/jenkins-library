@@ -45,11 +45,12 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
 
             // get context configuration
             Map config
+            echo "12121212121212121212 before"
             handleErrorDetails(stepName) {
                 config = getStepContextConfig(script, piperGoPath, metadataFile, defaultConfigArgs, customConfigArg)
                 echo "Context Config: ${config}"
             }
-
+            echo "12121212121212121212 after"
             // prepare stashes
             // first eliminate empty stashes
             config.stashContent = utils.unstashAll(config.stashContent)
@@ -66,6 +67,7 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
                 config.stashNoDefaultExcludes = parameters.stashNoDefaultExcludes
             }
 
+            echo "12121212121212121212 docker wrapper being called"
             dockerWrapper(script, stepName, config) {
                 handleErrorDetails(stepName) {
                     writePipelineEnv(script: script, piperGoPath: piperGoPath)
@@ -73,6 +75,7 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
                     try {
                         try {
                             try {
+                                echo "12121212121212121212 credential wrapper being called"
                                 credentialWrapper(config, credentialInfo, script) {
                                     sh "${piperGoPath} ${stepName}${defaultConfigArgs}${customConfigArg}"
                                 }
@@ -155,6 +158,7 @@ static String getCustomConfigArg(def script) {
 
 // reused in sonarExecuteScan
 void dockerWrapper(script, stepName, config, body) {
+    echo "12121212121212121212 docker wrapper docker image: ${config.dockerImage}"
     if (config.dockerImage) {
         echo "[INFO] executing pipeline step '${stepName}' with docker image '${config.dockerImage}'"
         Map dockerExecuteParameters = [:].plus(config)
@@ -170,7 +174,7 @@ void dockerWrapper(script, stepName, config, body) {
 // reused in sonarExecuteScan
 void credentialWrapper(config, List credentialInfo, body, script) {
     credentialInfo = handleVaultCredentials(config, credentialInfo)
-    credentialInfo = handleANSCredentials(script.commonPipelineEnvironment.configuration.general, credentialInfo)
+    credentialInfo = handleANSCredentials(script.commonPipelineEnvironment.configuration, credentialInfo)
     //echo "000000000000000 ${script.commonPipelineEnvironment.getValue('ansServiceKeyCredentialsId')}"
     //echo "5555555555555555 ${script.commonPipelineEnvironment.configuration.general.ansServiceKeyCredentialsId}"
 
@@ -272,8 +276,7 @@ List handleVaultCredentials(config, List credentialInfo) {
 
 // Injects ansCredentials if configured
 List handleANSCredentials(config, List credentialInfo) {
-    //echo "0000000000000001111111111111111 config: $config"
-    echo "000000000000000 ${script.commonPipelineEnvironment.getValue('ansServiceKeyCredentialsId')}"
+    echo "0000000000000001111111111111111 config: $config"
     //echo "55555555555555551111111111111111 config.ansServiceKeyCredentialsId:  ${config.ansServiceKeyCredentialsId}"
     if (config.containsKey('ansServiceKeyCredentialsId')) {
         echo "CONTAINS KEY 21212121"
