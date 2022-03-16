@@ -279,7 +279,7 @@ List handleVaultCredentials(config, List credentialInfo) {
 List handleANSCredentials(config, List credentialInfo) {
     echo "0000000000000001111111111111111 config: $config"
     //echo "55555555555555551111111111111111 config.ansServiceKeyCredentialsId:  ${config.ansServiceKeyCredentialsId}"
-    if (config.containsKey('ansServiceKeyCredentialsId')) {
+    if (config.general.containsKey('ansServiceKeyCredentialsId')) {
         echo "CONTAINS KEY 21212121"
         credentialInfo += [[type: 'string', id: 'ansServiceKeyCredentialsId', env: ['PIPER_ansServiceKey']]]
     }
