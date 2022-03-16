@@ -32,6 +32,7 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
         echo "Step params $stepParameters"
 
         echo "888888888888 ${script.commonPipelineEnvironment.configuration}"
+        Map configLinda = script.commonPipelineEnvironment.configuration
 
         withEnv([
             "PIPER_parametersJSON=${groovy.json.JsonOutput.toJson(stepParameters)}",
@@ -76,7 +77,7 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
                         try {
                             try {
                                 echo "12121212121212121212 credential wrapper being called"
-                                credentialWrapper(config, credentialInfo, script) {
+                                credentialWrapper(configLinda, credentialInfo, script) {
                                     sh "${piperGoPath} ${stepName}${defaultConfigArgs}${customConfigArg}"
                                 }
                             } finally {
@@ -174,7 +175,7 @@ void dockerWrapper(script, stepName, config, body) {
 // reused in sonarExecuteScan
 void credentialWrapper(config, List credentialInfo, body, script) {
     credentialInfo = handleVaultCredentials(config, credentialInfo)
-    credentialInfo = handleANSCredentials(script.commonPipelineEnvironment.configuration, credentialInfo)
+    credentialInfo = handleANSCredentials(config, credentialInfo)
     //echo "000000000000000 ${script.commonPipelineEnvironment.getValue('ansServiceKeyCredentialsId')}"
     //echo "5555555555555555 ${script.commonPipelineEnvironment.configuration.general.ansServiceKeyCredentialsId}"
 
