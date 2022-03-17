@@ -31,6 +31,8 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
         Map stepParameters = prepareStepParameters(parameters)
         echo "Step params $stepParameters"
 
+        echo "88888888888888888 ${script.commonPipelineEnvironment.configuration}"
+
         withEnv([
             "PIPER_parametersJSON=${groovy.json.JsonOutput.toJson(stepParameters)}",
             "PIPER_correlationID=${env.BUILD_URL}",
@@ -204,7 +206,6 @@ void credentialWrapper(config, List credentialInfo, body, script) {
             sshCreds = removeMissingCredentials(sshCreds, config)
         }
 
-        echo "88888888888888888 ${script.commonPipelineEnvironment.configuration}"
         creds = handleANSCredentials(creds)
 
         if (sshCreds.size() > 0) {
