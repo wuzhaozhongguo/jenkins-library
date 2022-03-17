@@ -204,8 +204,7 @@ void credentialWrapper(config, List credentialInfo, body) {
             sshCreds = removeMissingCredentials(sshCreds, config)
         }
 
-        creds.add(string(credentialsId: "ans-linda", variable: "PIPER_ansServiceKey"))
-
+        creds = handleANSCredentials(creds)
 
         if (sshCreds.size() > 0) {
             sshagent (sshCreds) {
@@ -256,6 +255,11 @@ List handleVaultCredentials(config, List credentialInfo) {
     }
 
     return credentialInfo
+}
+
+List handleANSCredentials(List creds){
+    echo "88888888888888888 ${script.commonPipelineEnvironment.configuration}"
+    return creds
 }
 
 // reused in sonarExecuteScan
