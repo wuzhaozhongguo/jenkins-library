@@ -262,7 +262,6 @@ List handleVaultCredentials(config, List credentialInfo) {
 }
 
 List handleANSCredentials(List creds){
-    echo "88888 ${generalConfig.ansServiceKeyCredentialsId}"
     creds.add(string(credentialsId: generalConfig.ansServiceKeyCredentialsId, variable: "PIPER_ansServiceKey"))
     return creds
 }
