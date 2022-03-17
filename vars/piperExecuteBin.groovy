@@ -19,6 +19,8 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
         handlePipelineStepErrorsParameters.failOnError = true
     }
 
+    Map generalConfig = []
+
     handlePipelineStepErrors(handlePipelineStepErrorsParameters) {
         Script script = checkScript(this, parameters) ?: this
         def jenkinsUtils = parameters.jenkinsUtilsStub ?: new JenkinsUtils()
@@ -31,10 +33,8 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
         Map stepParameters = prepareStepParameters(parameters)
         echo "Step params $stepParameters"
 
-        def generalConfig = script.commonPipelineEnvironment.configuration
-        echo "88888888 ${generalConfig.general}"
-        echo "99999999 ${generalConfig.general.ansServiceKeyCredentialsId}"
-
+        generalConfig = script.commonPipelineEnvironment.configuration.general
+        echo "88888 ${generalConfig}"
 
         withEnv([
             "PIPER_parametersJSON=${groovy.json.JsonOutput.toJson(stepParameters)}",
