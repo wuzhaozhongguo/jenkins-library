@@ -31,7 +31,7 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
         Map stepParameters = prepareStepParameters(parameters)
         echo "Step params $stepParameters"
 
-        echo "888888888888 ${script.commonPipelineEnvironment.configuration}"
+        //echo "888888888888 ${script.commonPipelineEnvironment.configuration}"
 
         withEnv([
             "PIPER_parametersJSON=${groovy.json.JsonOutput.toJson(stepParameters)}",
@@ -170,7 +170,7 @@ void dockerWrapper(script, stepName, config, body) {
 // reused in sonarExecuteScan
 void credentialWrapper(config, List credentialInfo, body, script) {
     credentialInfo = handleVaultCredentials(config, credentialInfo)
-    credentialInfo = handleANSCredentials(script.commonPipelineEnvironment.configuration.general, credentialInfo)
+    //credentialInfo = handleANSCredentials(script.commonPipelineEnvironment.configuration.general, credentialInfo)
     //echo "000000000000000 ${script.commonPipelineEnvironment.getValue('ansServiceKeyCredentialsId')}"
     //echo "5555555555555555 ${script.commonPipelineEnvironment.configuration.general.ansServiceKeyCredentialsId}"
 
@@ -273,7 +273,7 @@ List handleVaultCredentials(config, List credentialInfo) {
 // Injects ansCredentials if configured
 List handleANSCredentials(config, List credentialInfo) {
     //echo "0000000000000001111111111111111 config: $config"
-    echo "000000000000000 ${script.commonPipelineEnvironment.getValue('ansServiceKeyCredentialsId')}"
+    //echo "000000000000000 ${script.commonPipelineEnvironment.getValue('ansServiceKeyCredentialsId')}"
     //echo "55555555555555551111111111111111 config.ansServiceKeyCredentialsId:  ${config.ansServiceKeyCredentialsId}"
     if (config.containsKey('ansServiceKeyCredentialsId')) {
         echo "CONTAINS KEY 21212121"
