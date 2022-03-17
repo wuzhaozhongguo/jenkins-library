@@ -31,8 +31,8 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
         Map stepParameters = prepareStepParameters(parameters)
         echo "Step params $stepParameters"
 
-        echo "888888888888 ${script.commonPipelineEnvironment.configuration}"
-        Map configLinda = script.commonPipelineEnvironment.configuration
+//         echo "888888888888 ${script.commonPipelineEnvironment.configuration}"
+        //Map configLinda = script.commonPipelineEnvironment.configuration
 
         withEnv([
             "PIPER_parametersJSON=${groovy.json.JsonOutput.toJson(stepParameters)}",
@@ -46,12 +46,12 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
 
             // get context configuration
             Map config
-            echo "12121212121212121212 before"
+//             echo "12121212121212121212 before"
             handleErrorDetails(stepName) {
                 config = getStepContextConfig(script, piperGoPath, metadataFile, defaultConfigArgs, customConfigArg)
                 echo "Context Config: ${config}"
             }
-            echo "12121212121212121212 after"
+//             echo "12121212121212121212 after"
             // prepare stashes
             // first eliminate empty stashes
             config.stashContent = utils.unstashAll(config.stashContent)
@@ -68,7 +68,6 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
                 config.stashNoDefaultExcludes = parameters.stashNoDefaultExcludes
             }
 
-            echo "12121212121212121212 docker wrapper being called"
             dockerWrapper(script, stepName, config) {
                 handleErrorDetails(stepName) {
                     writePipelineEnv(script: script, piperGoPath: piperGoPath)
@@ -76,8 +75,7 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
                     try {
                         try {
                             try {
-                                echo "12121212121212121212 credential wrapper being called"
-                                credentialWrapper(configLinda, credentialInfo, script) {
+                                credentialWrapper(config, credentialInfo, script) {
                                     sh "${piperGoPath} ${stepName}${defaultConfigArgs}${customConfigArg}"
                                 }
                             } finally {
@@ -159,7 +157,7 @@ static String getCustomConfigArg(def script) {
 
 // reused in sonarExecuteScan
 void dockerWrapper(script, stepName, config, body) {
-    echo "12121212121212121212 docker wrapper docker image: ${config.dockerImage}"
+//     echo "12121212121212121212 docker wrapper docker image: ${config.dockerImage}"
     if (config.dockerImage) {
         echo "[INFO] executing pipeline step '${stepName}' with docker image '${config.dockerImage}'"
         Map dockerExecuteParameters = [:].plus(config)
@@ -218,25 +216,18 @@ void credentialWrapper(config, List credentialInfo, body, script) {
         if (sshCreds.size() > 0) {
             sshagent (sshCreds) {
                 withCredentials(creds) {
-                    echo "222222222222211212"
-                    sh "echo \$PIPER_ansServiceKey"
                     body()
-                    sh "echo \$PIPER_ansServiceKey"
                 }
             }
         } else {
             withCredentials(creds) {
-                echo "1111111111111111"
+//                 echo "1111111111111111"
                 sh "echo \$PIPER_ansServiceKey"
                 body()
-                sh "echo \$PIPER_ansServiceKey"
             }
         }
     } else {
-        echo "13131313131313"
-        sh "echo \$PIPER_ansServiceKey"
         body()
-        sh "echo \$PIPER_ansServiceKey"
     }
 }
 
@@ -277,10 +268,10 @@ List handleVaultCredentials(config, List credentialInfo) {
 
 // Injects ansCredentials if configured
 List handleANSCredentials(config, List credentialInfo) {
-    echo "0000000000000001111111111111111 config: $config"
+//     echo "0000000000000001111111111111111 config: $config"
     //echo "55555555555555551111111111111111 config.ansServiceKeyCredentialsId:  ${config.ansServiceKeyCredentialsId}"
-    if (config.general.containsKey('ansServiceKeyCredentialsId')) {
-        echo "CONTAINS KEY 21212121"
+    if (config.containsKey('ansServiceKeyCredentialsId')) {
+//         echo "CONTAINS KEY 21212121"
         credentialInfo += [[type: 'string', id: 'ansServiceKeyCredentialsId', env: ['PIPER_ansServiceKey']]]
     }
 
