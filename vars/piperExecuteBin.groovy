@@ -19,7 +19,7 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
         handlePipelineStepErrorsParameters.failOnError = true
     }
 
-    Map generalConfig = []
+    List generalConfig = []
 
     handlePipelineStepErrors(handlePipelineStepErrorsParameters) {
         Script script = checkScript(this, parameters) ?: this
