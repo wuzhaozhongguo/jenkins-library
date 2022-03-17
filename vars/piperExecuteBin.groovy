@@ -204,6 +204,7 @@ void credentialWrapper(config, List credentialInfo, body) {
             sshCreds = removeMissingCredentials(sshCreds, config)
         }
 
+        echo "88888888888888888 ${script.commonPipelineEnvironment.configuration}"
         creds = handleANSCredentials(creds)
 
         if (sshCreds.size() > 0) {
@@ -258,7 +259,7 @@ List handleVaultCredentials(config, List credentialInfo) {
 }
 
 List handleANSCredentials(List creds){
-    echo "88888888888888888 ${script.commonPipelineEnvironment.configuration}"
+    //echo "88888888888888888 ${script.commonPipelineEnvironment.configuration}"
     return creds
 }
 
