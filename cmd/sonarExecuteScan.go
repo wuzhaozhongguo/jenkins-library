@@ -457,6 +457,7 @@ func detectParametersFromCI(options *sonarExecuteScanOptions) {
 		}
 	} else {
 		branch := provider.GetBranch()
+		log.Entry().Info("Branch: " + branch)
 		if options.InferBranchName && len(options.BranchName) == 0 {
 			log.Entry().Info("Inferring parameter branchName from environment: " + branch)
 			options.BranchName = branch
