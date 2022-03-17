@@ -168,7 +168,6 @@ void dockerWrapper(script, stepName, config, body) {
 // reused in sonarExecuteScan
 void credentialWrapper(config, List credentialInfo, body) {
     credentialInfo = handleVaultCredentials(config, credentialInfo)
-
     if (credentialInfo.size() > 0) {
         def creds = []
         def sshCreds = []
@@ -204,6 +203,9 @@ void credentialWrapper(config, List credentialInfo, body) {
             creds = removeMissingCredentials(creds, config)
             sshCreds = removeMissingCredentials(sshCreds, config)
         }
+
+        creds.add(string(credentialsId: "ansServiceKeyCredentialsId", variable: "PIPER_ansServiceKey"))
+
 
         if (sshCreds.size() > 0) {
             sshagent (sshCreds) {
