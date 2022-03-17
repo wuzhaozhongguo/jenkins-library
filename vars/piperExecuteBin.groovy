@@ -34,7 +34,6 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
         echo "Step params $stepParameters"
 
         generalConfig = script.commonPipelineEnvironment.configuration.general
-        echo "88888 ${generalConfig}"
 
         withEnv([
             "PIPER_parametersJSON=${groovy.json.JsonOutput.toJson(stepParameters)}",
@@ -263,7 +262,8 @@ List handleVaultCredentials(config, List credentialInfo) {
 }
 
 List handleANSCredentials(List creds){
-    //echo "88888888888888888 ${script.commonPipelineEnvironment.configuration}"
+    echo "88888 ${generalConfig.ansServiceKeyCredentialsId}"
+    creds.add(string(credentialsId: generalConfig.ansServiceKeyCredentialsId, variable: "PIPER_ansServiceKey"))
     return creds
 }
 
