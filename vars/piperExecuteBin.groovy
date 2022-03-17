@@ -31,8 +31,6 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
         Map stepParameters = prepareStepParameters(parameters)
         echo "Step params $stepParameters"
 
-        //echo "888888888888 ${script.commonPipelineEnvironment.configuration}"
-
         withEnv([
             "PIPER_parametersJSON=${groovy.json.JsonOutput.toJson(stepParameters)}",
             "PIPER_correlationID=${env.BUILD_URL}",
@@ -73,7 +71,7 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
                     try {
                         try {
                             try {
-                                credentialWrapper(config, credentialInfo, script) {
+                                credentialWrapper(config, credentialInfo) {
                                     sh "${piperGoPath} ${stepName}${defaultConfigArgs}${customConfigArg}"
                                 }
                             } finally {
@@ -168,11 +166,8 @@ void dockerWrapper(script, stepName, config, body) {
 }
 
 // reused in sonarExecuteScan
-void credentialWrapper(config, List credentialInfo, body, script) {
+void credentialWrapper(config, List credentialInfo, body) {
     credentialInfo = handleVaultCredentials(config, credentialInfo)
-    //credentialInfo = handleANSCredentials(script.commonPipelineEnvironment.configuration.general, credentialInfo)
-    //echo "000000000000000 ${script.commonPipelineEnvironment.getValue('ansServiceKeyCredentialsId')}"
-    //echo "5555555555555555 ${script.commonPipelineEnvironment.configuration.general.ansServiceKeyCredentialsId}"
 
     if (credentialInfo.size() > 0) {
         def creds = []
@@ -213,25 +208,16 @@ void credentialWrapper(config, List credentialInfo, body, script) {
         if (sshCreds.size() > 0) {
             sshagent (sshCreds) {
                 withCredentials(creds) {
-                    echo "222222222222211212"
-                    sh "echo \$PIPER_ansServiceKey"
                     body()
-                    sh "echo \$PIPER_ansServiceKey"
                 }
             }
         } else {
             withCredentials(creds) {
-                echo "1111111111111111"
-                sh "echo \$PIPER_ansServiceKey"
                 body()
-                sh "echo \$PIPER_ansServiceKey"
             }
         }
     } else {
-        echo "13131313131313"
-        sh "echo \$PIPER_ansServiceKey"
         body()
-        sh "echo \$PIPER_ansServiceKey"
     }
 }
 
@@ -265,19 +251,6 @@ List handleVaultCredentials(config, List credentialInfo) {
 
     if (config.containsKey('vaultTokenCredentialsId')) {
         credentialInfo += [[type: 'token', id: 'vaultTokenCredentialsId', env: ['PIPER_vaultToken']]]
-    }
-
-    return credentialInfo
-}
-
-// Injects ansCredentials if configured
-List handleANSCredentials(config, List credentialInfo) {
-    //echo "0000000000000001111111111111111 config: $config"
-    //echo "000000000000000 ${script.commonPipelineEnvironment.getValue('ansServiceKeyCredentialsId')}"
-    //echo "55555555555555551111111111111111 config.ansServiceKeyCredentialsId:  ${config.ansServiceKeyCredentialsId}"
-    if (config.containsKey('ansServiceKeyCredentialsId')) {
-        echo "CONTAINS KEY 21212121"
-        credentialInfo += [[type: 'string', id: 'ansServiceKeyCredentialsId', env: ['PIPER_ansServiceKey']]]
     }
 
     return credentialInfo
