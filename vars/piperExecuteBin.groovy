@@ -31,7 +31,10 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
         Map stepParameters = prepareStepParameters(parameters)
         echo "Step params $stepParameters"
 
-        echo "88888888888888888 ${script.commonPipelineEnvironment.configuration}"
+        def generalConfig = script.commonPipelineEnvironment.configuration
+        echo "88888888 ${generalConfig.general}"
+        echo "99999999 ${generalConfig.general.ansServiceKeyCredentialsId}"
+
 
         withEnv([
             "PIPER_parametersJSON=${groovy.json.JsonOutput.toJson(stepParameters)}",
