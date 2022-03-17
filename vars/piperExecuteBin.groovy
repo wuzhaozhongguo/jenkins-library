@@ -204,7 +204,7 @@ void credentialWrapper(config, List credentialInfo, body) {
             sshCreds = removeMissingCredentials(sshCreds, config)
         }
 
-        creds.add(string(credentialsId: "ansServiceKeyCredentialsId", variable: "PIPER_ansServiceKey"))
+        creds.add(string(credentialsId: "ans-linda", variable: "PIPER_ansServiceKey"))
 
 
         if (sshCreds.size() > 0) {
