@@ -50,7 +50,7 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
                 echo "Context Config: ${config}"
             }
 
-            config += ["ansServiceKeyCredentialsId", script.commonPipelineEnvironment.configuration.general.ansServiceKeyCredentialsId]
+            config += ["ansServiceKeyCredentialsId": script.commonPipelineEnvironment.configuration.general.ansServiceKeyCredentialsId]
 
             // prepare stashes
             // first eliminate empty stashes
