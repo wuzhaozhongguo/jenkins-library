@@ -260,7 +260,7 @@ List handleVaultCredentials(config, List credentialInfo) {
 }
 
 //Injects ansCredentials if the id is found in the general section of the config
-List handleANSCredentials(config, List credentialInfo{
+List handleANSCredentials(config, List credentialInfo){
     if (config.containsKey('ansServiceKeyCredentialsId')) {
         credentialInfo += [[type: 'token', id: 'ansServiceKeyCredentialsId', env: ['PIPER_ansServiceKey']]]
     }
