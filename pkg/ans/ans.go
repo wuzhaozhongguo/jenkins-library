@@ -31,6 +31,7 @@ func ReadANSServiceKey(serviceKeyJSON string) (ansServiceKey ANSServiceKey, err 
 }
 
 const body = `{
+"eventType": "NotWorkingExternalRecommendationService",
 "eventTimestamp": 1535618178,
 "resource": {
 "resourceName": "web-shop",
