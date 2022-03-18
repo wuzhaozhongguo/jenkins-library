@@ -31,7 +31,7 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
         Map stepParameters = prepareStepParameters(parameters)
         echo "Step params $stepParameters"
 
-        generalConfig = script.commonPipelineEnvironment.configuration.general
+        //generalConfig = script.commonPipelineEnvironment.configuration.general
 
         withEnv([
             "PIPER_parametersJSON=${groovy.json.JsonOutput.toJson(stepParameters)}",
@@ -49,6 +49,8 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
                 config = getStepContextConfig(script, piperGoPath, metadataFile, defaultConfigArgs, customConfigArg)
                 echo "Context Config: ${config}"
             }
+
+            config += ["ansServiceKeyCredentialsId", script.commonPipelineEnvironment.configuration.general.ansServiceKeyCredentialsId]
 
             // prepare stashes
             // first eliminate empty stashes
@@ -206,7 +208,7 @@ void credentialWrapper(config, List credentialInfo, body) {
             sshCreds = removeMissingCredentials(sshCreds, config)
         }
 
-        creds = handleANSCredentials(creds)
+        //creds = handleANSCredentials(creds)
 
         if (sshCreds.size() > 0) {
             sshagent (sshCreds) {
@@ -254,6 +256,10 @@ List handleVaultCredentials(config, List credentialInfo) {
 
     if (config.containsKey('vaultTokenCredentialsId')) {
         credentialInfo += [[type: 'token', id: 'vaultTokenCredentialsId', env: ['PIPER_vaultToken']]]
+    }
+
+    if (config.containsKey('ansServiceKeyCredentialsId')) {
+        credentialInfo += [[type: 'token', id: 'ansServiceKeyCredentialsId', env: ['PIPER_ansServiceKey']]]
     }
 
     return credentialInfo
