@@ -19,8 +19,6 @@ void call(Map parameters = [:], String stepName, String metadataFile, List crede
         handlePipelineStepErrorsParameters.failOnError = true
     }
 
-    generalConfig = []
-
     handlePipelineStepErrors(handlePipelineStepErrorsParameters) {
         Script script = checkScript(this, parameters) ?: this
         def jenkinsUtils = parameters.jenkinsUtilsStub ?: new JenkinsUtils()
