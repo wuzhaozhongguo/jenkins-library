@@ -28,6 +28,7 @@ type GeneralConfigOptions struct {
 	IgnoreCustomDefaults bool
 	ParametersJSON       string
 	ANSServiceKey        string
+	ANSEventTemplate     string
 	EnvRootPath          string
 	NoTelemetry          bool
 	StageName            string
@@ -180,8 +181,10 @@ func Execute() {
 	rootCmd.AddCommand(ShellExecuteCommand())
 	rootCmd.AddCommand(ApiProxyDownloadCommand())
 	rootCmd.AddCommand(ApiKeyValueMapDownloadCommand())
+	rootCmd.AddCommand(ApiProviderDownloadCommand())
 	rootCmd.AddCommand(ApiProxyUploadCommand())
 	rootCmd.AddCommand(GradleExecuteBuildCommand())
+	rootCmd.AddCommand(ApiKeyValueMapUploadCommand())
 
 	addRootFlags(rootCmd)
 
@@ -208,6 +211,7 @@ func addRootFlags(rootCmd *cobra.Command) {
 	rootCmd.PersistentFlags().BoolVar(&GeneralConfig.IgnoreCustomDefaults, "ignoreCustomDefaults", false, "Disables evaluation of the parameter 'customDefaults' in the pipeline configuration file")
 	rootCmd.PersistentFlags().StringVar(&GeneralConfig.ParametersJSON, "parametersJSON", os.Getenv("PIPER_parametersJSON"), "Parameters to be considered in JSON format")
 	rootCmd.PersistentFlags().StringVar(&GeneralConfig.ANSServiceKey, "ansServiceKey", os.Getenv("PIPER_ansServiceKey"), "Service Key JSON needed for ANS")
+	rootCmd.PersistentFlags().StringVar(&GeneralConfig.ANSEventTemplate, "ansEventTemplate", os.Getenv("PIPER_ansEventTemplate"), "Optional event template in JSON format for ANS")
 	rootCmd.PersistentFlags().StringVar(&GeneralConfig.EnvRootPath, "envRootPath", ".pipeline", "Root path to Piper pipeline shared environments")
 	rootCmd.PersistentFlags().StringVar(&GeneralConfig.StageName, "stageName", "", "Name of the stage for which configuration should be included")
 	rootCmd.PersistentFlags().StringVar(&GeneralConfig.StepConfigJSON, "stepConfigJSON", os.Getenv("PIPER_stepConfigJSON"), "Step configuration in JSON format")
