@@ -67,6 +67,12 @@ Learn more about the SAP API Management API for downloading an Key Value Map art
 				log.RegisterHook(logCollector)
 			}
 
+			if len(GeneralConfig.ANSServiceKey) > 0 {
+				log.RegisterSecret(GeneralConfig.ANSServiceKey)
+				ansHook := log.NewANSHook(GeneralConfig.ANSServiceKey, GeneralConfig.CorrelationID, GeneralConfig.ANSEventTemplate)
+				log.RegisterHook(&ansHook)
+			}
+
 			validation, err := validation.New(validation.WithJSONNamesForStructFields(), validation.WithPredefinedErrorMessages())
 			if err != nil {
 				return err
@@ -90,9 +96,6 @@ Learn more about the SAP API Management API for downloading an Key Value Map art
 				telemetryClient.Send()
 				if len(GeneralConfig.HookConfig.SplunkConfig.Dsn) > 0 {
 					splunkClient.Send(telemetryClient.GetData(), logCollector)
-				}
-				if len(GeneralConfig.ANSServiceKey) > 0 {
-					ans.Send(GeneralConfig.ANSServiceKey)
 				}
 			}
 			log.DeferExitHandler(handler)
