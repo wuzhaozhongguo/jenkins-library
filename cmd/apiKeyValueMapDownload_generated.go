@@ -7,7 +7,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/SAP/jenkins-library/pkg/ans"
 	"github.com/SAP/jenkins-library/pkg/config"
 	"github.com/SAP/jenkins-library/pkg/log"
 	"github.com/SAP/jenkins-library/pkg/splunk"
