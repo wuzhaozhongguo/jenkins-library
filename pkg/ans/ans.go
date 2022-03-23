@@ -57,15 +57,18 @@ type Event struct {
 	Region         string                 `json:"region,omitempty"`
 	RegionType     string                 `json:"regionType,omitempty"`
 	Tags           map[string]interface{} `json:"tags,omitempty"`
-	Resource       *struct {
-		GlobalAccount    string                 `json:"globalAccount,omitempty"`
-		SubAccount       string                 `json:"subAccount,omitempty"`
-		ResourceGroup    string                 `json:"resourceGroup,omitempty"`
-		ResourceName     string                 `json:"resourceName,omitempty"`
-		ResourceType     string                 `json:"resourceType,omitempty"`
-		ResourceInstance string                 `json:"resourceInstance,omitempty"`
-		Tags             map[string]interface{} `json:"tags,omitempty"`
-	} `json:"resource,omitempty"`
+	Resource       *Resource              `json:"resource,omitempty"`
+}
+
+// Resource structure of the SAP Alert Notification Service Event
+type Resource struct {
+	GlobalAccount    string                 `json:"globalAccount,omitempty"`
+	SubAccount       string                 `json:"subAccount,omitempty"`
+	ResourceGroup    string                 `json:"resourceGroup,omitempty"`
+	ResourceName     string                 `json:"resourceName,omitempty"`
+	ResourceType     string                 `json:"resourceType,omitempty"`
+	ResourceInstance string                 `json:"resourceInstance,omitempty"`
+	Tags             map[string]interface{} `json:"tags,omitempty"`
 }
 
 // UnmarshallServiceKeyJSON unmarshalls the given json service key string.
@@ -78,9 +81,9 @@ func UnmarshallServiceKeyJSON(serviceKeyJSON string) (ansServiceKey ServiceKey, 
 	return
 }
 
-// UnmarshallEventJSON unmarshalls an ANS Event JSON string
-func UnmarshallEventJSON(eventJSON string) (event Event, err error) {
-	err = json.Unmarshal([]byte(eventJSON), &event)
+// MergeWithJSON unmarshalls an ANS Event JSON string and merges it with the existing receiver Event
+func (event *Event) MergeWithJSON(eventJSON []byte) (err error) {
+	err = json.Unmarshal(eventJSON, &event)
 	if err != nil {
 		err = errors.Wrapf(err, "error unmarshalling ANS event from JSON string %q", eventJSON)
 		return
