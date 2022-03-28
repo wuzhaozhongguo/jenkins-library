@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"os"
 	"testing"
 	"time"
 )
@@ -37,11 +38,11 @@ func TestNewANSHook(t *testing.T) {
 	type args struct {
 		serviceKey    string
 		correlationID string
-		eventTemplate string
 	}
 	tests := []struct {
 		name string
 		args args
+		eventTemplate string
 		want ANSHook
 	}{
 		{
@@ -51,9 +52,8 @@ func TestNewANSHook(t *testing.T) {
 				correlationID: testCorrelationID,
 			},
 			want: ANSHook{
-				correlationID: testCorrelationID,
-				client:        testClient,
-				event:         defaultEvent(),
+				client: testClient,
+				event:  defaultEvent(),
 			},
 		},
 		{
@@ -62,9 +62,8 @@ func TestNewANSHook(t *testing.T) {
 				correlationID: testCorrelationID,
 			},
 			want: ANSHook{
-				correlationID: testCorrelationID,
-				client:        ans.ANS{},
-				event:         defaultEvent(),
+				client: ans.ANS{},
+				event:  defaultEvent(),
 			},
 		},
 		{
@@ -72,18 +71,30 @@ func TestNewANSHook(t *testing.T) {
 			args: args{
 				serviceKey:    testServiceKeyJSON,
 				correlationID: testCorrelationID,
-				eventTemplate: `{"priority":123}`,
 			},
+			eventTemplate: `{"priority":123}`,
 			want: ANSHook{
-				correlationID: testCorrelationID,
-				client:        testClient,
-				event:         mergeEvents(t, defaultEvent(), ans.Event{Priority: 123}),
+				client: testClient,
+				event:  mergeEvents(t, defaultEvent(), ans.Event{Priority: 123}),
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewANSHook(tt.args.serviceKey, tt.args.correlationID, tt.args.eventTemplate)
+			var testEventTemplateFilePath string
+			if len(tt.eventTemplate) > 0 {
+				var err error
+				testEventTemplateFile, err := os.CreateTemp("", "event_template_*.json")
+				require.NoError(t, err, "File creation failed!")
+				defer testEventTemplateFile.Close()
+				defer os.Remove(testEventTemplateFile.Name())
+				data := []byte(tt.eventTemplate)
+				_, err = testEventTemplateFile.Write(data)
+				require.NoError(t, err, "Could not write test data to test file!")
+				testEventTemplateFilePath = testEventTemplateFile.Name()
+			}
+
+			got := NewANSHook(tt.args.serviceKey, tt.args.correlationID, testEventTemplateFilePath)
 			assert.Equal(t, tt.want, got, "new ANSHook not as expected")
 		})
 	}
@@ -100,7 +111,7 @@ func TestANSHook_Fire(t *testing.T) {
 	tests := []struct {
 		name      string
 		fields    fields
-		entryArg  *logrus.Entry
+		entryArgs []*logrus.Entry
 		wantEvent ans.Event
 	}{
 		{
@@ -110,11 +121,13 @@ func TestANSHook_Fire(t *testing.T) {
 				client:        testClient,
 				event:         defaultEvent(),
 			},
-			entryArg: &logrus.Entry{
-				Level:   logrus.InfoLevel,
-				Time:    time.Date(2001, 2, 3, 4, 5, 6, 7, time.UTC),
-				Message: "my log message",
-				Data:    map[string]interface{}{"stepName": "testStep"},
+			entryArgs: []*logrus.Entry{
+				{
+					Level:   logrus.InfoLevel,
+					Time:    time.Date(2001, 2, 3, 4, 5, 6, 7, time.UTC),
+					Message: "my log message",
+					Data:    map[string]interface{}{"stepName": "testStep"},
+				},
 			},
 			wantEvent: ans.Event{
 				EventType:      "Piper",
@@ -131,6 +144,64 @@ func TestANSHook_Fire(t *testing.T) {
 			},
 		},
 		{
+			name: "If error key set in data, severity should be error",
+			fields: fields{
+				correlationID: testCorrelationID,
+				client:        testClient,
+				event:         defaultEvent(),
+			},
+			entryArgs: []*logrus.Entry{
+				{
+					Level:   logrus.InfoLevel,
+					Time:    time.Date(2001, 2, 3, 4, 5, 6, 7, time.UTC),
+					Message: "my log message",
+					Data:    map[string]interface{}{"stepName": "testStep", "error": "an error occurred!"},
+				},
+			},
+			wantEvent: ans.Event{
+				EventType:      "Piper",
+				EventTimestamp: time.Date(2001, 2, 3, 4, 5, 6, 7, time.UTC).Unix(),
+				Severity:       "ERROR",
+				Category:       "EXCEPTION",
+				Subject:        "testStep",
+				Body:           "my log message",
+				Resource: &ans.Resource{
+					ResourceType: "Piper",
+					ResourceName: "Pipeline",
+				},
+				Tags: map[string]interface{}{"ans:correlationId": "1234", "stepName": "testStep", "error": "an error occurred!", "logLevel": "error"},
+			},
+		},
+		{
+			name: "If message is fatal error, severity should be fatal",
+			fields: fields{
+				correlationID: testCorrelationID,
+				client:        testClient,
+				event:         defaultEvent(),
+			},
+			entryArgs: []*logrus.Entry{
+				{
+					Level:   logrus.InfoLevel,
+					Time:    time.Date(2001, 2, 3, 4, 5, 6, 7, time.UTC),
+					Message: "fatal error: an error occurred",
+					Data:    map[string]interface{}{"stepName": "testStep"},
+				},
+			},
+			wantEvent: ans.Event{
+				EventType:      "Piper",
+				EventTimestamp: time.Date(2001, 2, 3, 4, 5, 6, 7, time.UTC).Unix(),
+				Severity:       "FATAL",
+				Category:       "EXCEPTION",
+				Subject:        "testStep",
+				Body:           "fatal error: an error occurred",
+				Resource: &ans.Resource{
+					ResourceType: "Piper",
+					ResourceName: "Pipeline",
+				},
+				Tags: map[string]interface{}{"ans:correlationId": "1234", "stepName": "testStep", "logLevel": "fatal"},
+			},
+		},
+		{
 			name: "Event already set",
 			fields: fields{
 				correlationID: testCorrelationID,
@@ -141,11 +212,13 @@ func TestANSHook_Fire(t *testing.T) {
 					Tags:      map[string]interface{}{"Some": 1.0, "Additional": "a string", "Tags": true},
 				}),
 			},
-			entryArg: &logrus.Entry{
-				Level:   logrus.InfoLevel,
-				Time:    time.Date(2001, 2, 3, 4, 5, 6, 7, time.UTC),
-				Message: "my log message",
-				Data:    map[string]interface{}{"stepName": "testStep"},
+			entryArgs: []*logrus.Entry{
+				{
+					Level:   logrus.InfoLevel,
+					Time:    time.Date(2001, 2, 3, 4, 5, 6, 7, time.UTC),
+					Message: "my log message",
+					Data:    map[string]interface{}{"stepName": "testStep"},
+				},
 			},
 			wantEvent: ans.Event{
 				EventType:      "My event type",
@@ -161,16 +234,54 @@ func TestANSHook_Fire(t *testing.T) {
 				Tags: map[string]interface{}{"ans:correlationId": testCorrelationID, "stepName": "testStep", "logLevel": "info", "Some": 1.0, "Additional": "a string", "Tags": true},
 			},
 		},
+		{
+			name: "Log entries should not affect each other",
+			fields: fields{
+				correlationID: testCorrelationID,
+				client:        testClient,
+				event:         defaultEvent(),
+			},
+			entryArgs: []*logrus.Entry{
+				{
+					Level:   logrus.InfoLevel,
+					Time:    time.Date(2001, 2, 3, 4, 5, 6, 7, time.UTC),
+					Message: "my log message",
+					Data:    map[string]interface{}{"stepName": "testStep", "this entry": "should only be part of this event"},
+				},
+				{
+					Level:   logrus.WarnLevel,
+					Time:    time.Date(2001, 2, 3, 4, 5, 6, 8, time.UTC),
+					Message: "another message",
+					Data:    map[string]interface{}{"stepName": "testStep"},
+				},
+			},
+			wantEvent: ans.Event{
+				EventType:      "Piper",
+				EventTimestamp: time.Date(2001, 2, 3, 4, 5, 6, 8, time.UTC).Unix(),
+				Severity:       "WARNING",
+				Category:       "ALERT",
+				Subject:        "testStep",
+				Body:           "another message",
+				Resource: &ans.Resource{
+					ResourceType: "Piper",
+					ResourceName: "Pipeline",
+				},
+				Tags: map[string]interface{}{"ans:correlationId": "1234", "stepName": "testStep", "logLevel": "warning"},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ansHook := &ANSHook{
-				correlationID: tt.fields.correlationID,
-				client:        tt.fields.client,
-				event:         tt.fields.event,
+				client: tt.fields.client,
+				event:  tt.fields.event,
 			}
 			defer func() { testEvent = ans.Event{} }()
-			ansHook.Fire(tt.entryArg)
+			for _, entryArg := range tt.entryArgs {
+				originalLogLevel := entryArg.Level
+				ansHook.Fire(entryArg)
+				assert.Equal(t, originalLogLevel.String(), entryArg.Level.String(), "Entry error level has been altered")
+			}
 			assert.Equal(t, tt.wantEvent, testEvent, "Event is not as expected.")
 		})
 	}

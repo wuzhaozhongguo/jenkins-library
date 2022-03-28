@@ -1,24 +1,26 @@
 package log
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/SAP/jenkins-library/pkg/ans"
 	"github.com/SAP/jenkins-library/pkg/xsuaa"
 	"github.com/sirupsen/logrus"
+	"io/ioutil"
+	"strings"
 )
 
 // ANSHook is used to set the hook features for the logrus hook
 type ANSHook struct {
-	correlationID string
-	client        ans.Client
-	event         ans.Event
+	client ans.Client
+	event  ans.Event
 }
 
 // NewANSHook creates a new ANS hook for logrus
-func NewANSHook(serviceKey, correlationID, eventTemplate string) ANSHook {
+func NewANSHook(serviceKey, correlationID, eventTemplateFilePath string) ANSHook {
 	ansServiceKey, err := ans.UnmarshallServiceKeyJSON(serviceKey)
 	if err != nil {
-		Entry().Warnf("cannot initialize ans due to faulty serviceKey json: %v", err)
+		Entry().WithField("stepName", "ANS").Warnf("cannot initialize ans due to faulty serviceKey json: %v", err)
 	}
 	event := ans.Event{
 		EventType: "Piper",
@@ -28,10 +30,14 @@ func NewANSHook(serviceKey, correlationID, eventTemplate string) ANSHook {
 			ResourceName: "Pipeline",
 		},
 	}
-	if len(eventTemplate) > 0 {
-		err = event.MergeWithJSON([]byte(eventTemplate))
+	if len(eventTemplateFilePath) > 0 {
+		eventTemplate, err := ioutil.ReadFile(eventTemplateFilePath)
 		if err != nil {
-			Entry().Warnf("provided ANS event template could not be unmarshalled: %v", err)
+			Entry().WithField("stepName", "ANS").Warnf("provided ANS event template file with path '%s' could not be read: %v", eventTemplateFilePath, err)
+		}
+		err = event.MergeWithJSON(eventTemplate)
+		if err != nil {
+			Entry().WithField("stepName", "ANS").Warnf("provided ANS event template '%s' could not be unmarshalled: %v", eventTemplate, err)
 		}
 	}
 	x := xsuaa.XSUAA{
@@ -40,9 +46,8 @@ func NewANSHook(serviceKey, correlationID, eventTemplate string) ANSHook {
 		ClientSecret: ansServiceKey.ClientSecret,
 	}
 	h := ANSHook{
-		correlationID: correlationID,
-		client:        ans.ANS{XSUAA: x, URL: ansServiceKey.Url},
-		event:         event,
+		client: ans.ANS{XSUAA: x, URL: ansServiceKey.Url},
+		event:  event,
 	}
 	return h
 }
@@ -54,20 +59,41 @@ func (ansHook *ANSHook) Levels() []logrus.Level {
 
 // Fire creates a new event from the logrus and sends an event to the ANS backend
 func (ansHook *ANSHook) Fire(entry *logrus.Entry) error {
-	ansHook.event.EventTimestamp = entry.Time.Unix()
-	ansHook.event.Severity, ansHook.event.Category = ans.TranslateLogrusLogLevel(entry.Level)
-	if ansHook.event.Subject == "" {
-		ansHook.event.Subject = fmt.Sprint(entry.Data["stepName"])
-	}
-	ansHook.event.Body = entry.Message
-	ansHook.event.Tags["logLevel"] = entry.Level.String()
-	for k, v := range entry.Data {
-		ansHook.event.Tags[k] = v
+	logLevel := entry.Level
+	event, err := copyEvent(ansHook.event)
+	if err != nil {
+		return err
 	}
 
-	err := ansHook.client.Send(ansHook.event)
+	event.EventTimestamp = entry.Time.Unix()
+	if event.Subject == "" {
+		event.Subject = fmt.Sprint(entry.Data["stepName"])
+	}
+	if strings.HasPrefix(entry.Message, "fatal error") {
+		logLevel = logrus.FatalLevel
+	}
+	event.Body = entry.Message
+	for k, v := range entry.Data {
+		if k == "error" {
+			logLevel = logrus.ErrorLevel
+		}
+		event.Tags[k] = v
+	}
+	event.Severity, event.Category = ans.TranslateLogrusLogLevel(logLevel)
+	event.Tags["logLevel"] = logLevel.String()
+
+	err = ansHook.client.Send(event)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func copyEvent(source ans.Event) (destination ans.Event, err error) {
+	sourceJSON, err := json.Marshal(source)
+	if err != nil {
+		return
+	}
+	err = destination.MergeWithJSON(sourceJSON)
+	return
 }
