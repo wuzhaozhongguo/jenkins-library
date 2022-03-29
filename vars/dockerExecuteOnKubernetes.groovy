@@ -321,15 +321,12 @@ void executeOnPod(Map config, utils, Closure body, Script script) {
                     echo "ContainerConfig: ${containerParams}"
                     container(containerParams) {
                         try {
-                            echo "1111111111"
-                            sh 'cat $PIPER_ansEventTemplateFilePath || true'
+                            echo "1111111111 ${fileExists(env.PIPER_ansEventTemplateFilePath)}"
                             utils.unstashAll(stashContent)
-                            echo "2222222222"
-                            sh 'cat $PIPER_ansEventTemplateFilePath || true'
+                            echo "2222222222 ${fileExists(env.PIPER_ansEventTemplateFilePath)}"
                             echo "invalidate stash workspace-${config.uniqueId}"
                             stash name: "workspace-${config.uniqueId}", excludes: '**/*', allowEmpty: true
-                            echo "3333333333"
-                            sh 'cat $PIPER_ansEventTemplateFilePath || true'
+                            echo "3333333333 ${fileExists(env.PIPER_ansEventTemplateFilePath)}"
                             body()
                         } finally {
                             stashWorkspace(config, 'container', true, true)
